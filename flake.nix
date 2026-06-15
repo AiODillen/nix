@@ -23,6 +23,9 @@
       stylix,
       ...
     }@inputs:
+    let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in
     {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -33,5 +36,17 @@
           ./hosts/nixos/default.nix
         ];
       };
+
+      checks.x86_64-linux.niri-config =
+        let
+          cfg = self.nixosConfigurations.nixos.config
+                  .home-manager.users.dillen
+                  .xdg.configFile."niri/config.kdl".text;
+        in
+        pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
+          echo ${pkgs.lib.escapeShellArg cfg} > config.kdl
+          niri validate --config config.kdl
+          touch $out
+        '';
     };
 }
