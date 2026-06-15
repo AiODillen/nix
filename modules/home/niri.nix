@@ -4,6 +4,10 @@ lib.mkIf (osConfig.mySystem.desktop == "niri") {
   xdg.configFile."niri/config.kdl".text = ''
     prefer-no-csd
 
+    output "*" {
+        variable-refresh-rate on-demand=true
+    }
+
     input {
         keyboard {
             xkb {
