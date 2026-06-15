@@ -1,4 +1,8 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
+let
+  firefox-addons =
+    inputs.stylix.inputs.nur.legacyPackages.${pkgs.stdenv.hostPlatform.system}.repos.rycee.firefox-addons;
+in
 lib.mkIf config.mySystem.theming.enable {
   # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
   # Stylix's kmscon module tries to set services.kmscon.config which no longer
@@ -57,5 +61,12 @@ lib.mkIf config.mySystem.theming.enable {
 
     targets.fish.enable = true;
     targets.gnome.enable = config.mySystem.desktop == "gnome";
+  };
+
+  programs.firefox.policies.ExtensionSettings = {
+    "FirefoxColor@mozilla.com" = {
+      installation_mode = "force_installed";
+      install_url = "file://${firefox-addons.firefox-color}/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/FirefoxColor@mozilla.com.xpi";
+    };
   };
 }
