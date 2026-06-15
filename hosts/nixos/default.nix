@@ -19,10 +19,12 @@
 
   # ── DE SWITCH ──────────────────────────────────────────────
   # Change to "gnome" and run: sudo nixos-rebuild switch --flake ~/nixos-config#nixos
-  mySystem.desktop = "niri";
-  mySystem.gaming.enable = true;
-  mySystem.theming.enable = true;
-  mySystem.storage.automount.enable = true;
+  mySystem = {
+    desktop = "niri";
+    gaming.enable = true;
+    theming.enable = true;
+    storage.automount.enable = true;
+  };
   # ───────────────────────────────────────────────────────────
 
   # wallpaper.png is at the flake root; path resolves correctly from this file
@@ -32,6 +34,6 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     extraSpecialArgs = { inherit inputs; };
-    users.dillen = import ../../home/dillen/default.nix;
+    users.dillen = import ../../users/dillen/default.nix;
   };
 }
