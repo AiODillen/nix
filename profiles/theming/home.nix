@@ -5,6 +5,9 @@ lib.mkIf osConfig.mySystem.theming.enable {
     profiles.default = {
       isDefault = true;
       extensions.force = true;
+      settings = {
+        "extensions.autoDisableScopes" = 0;
+      };
     };
   };
   stylix.targets.firefox = {
