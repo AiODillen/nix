@@ -1,5 +1,5 @@
-{ ... }:
-{
+{ config, lib, ... }:
+lib.mkIf config.mySystem.gaming.enable {
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;

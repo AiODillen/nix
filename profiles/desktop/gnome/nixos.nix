@@ -9,6 +9,4 @@ lib.mkIf (config.mySystem.desktop == "gnome") {
     desktopManager.gnome.enable = true;
     displayManager.gdm.enable = true;
   };
-
-  stylix.targets.gnome.enable = true;
 }
