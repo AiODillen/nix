@@ -7,7 +7,7 @@
   ];
 
   imports = [
-    ../../hardware-configuration.nix
+    ./hardware.nix
     ../../modules/options.nix
     ../../modules/nixos/common.nix
     ../../modules/nixos/disable-kmscon.nix
