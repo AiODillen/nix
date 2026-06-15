@@ -10,8 +10,7 @@
     ./hardware.nix
     ../../modules/options.nix
     ../../profiles/core/nixos.nix
-    ../../modules/nixos/disable-kmscon.nix
-    ../../modules/nixos/stylix.nix
+    ../../profiles/theming/nixos.nix
     ../../profiles/desktop/niri/nixos.nix
     ../../profiles/desktop/gnome/nixos.nix
     ../../profiles/gaming/nixos.nix

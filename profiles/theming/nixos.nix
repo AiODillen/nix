@@ -1,5 +1,10 @@
-{ pkgs, ... }:
-{
+{ config, lib, pkgs, ... }:
+lib.mkIf config.mySystem.theming.enable {
+  # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
+  # Stylix's kmscon module tries to set services.kmscon.config which no longer
+  # exists; the matching disabledModules entry lives in hosts/nixos/default.nix.
+  services.kmscon.enable = false;
+
   stylix = {
     enable = true;
     polarity = "dark";
@@ -56,7 +61,7 @@
       size = 24;
     };
 
-    # Disabled by default; modules/nixos/gnome.nix re-enables when desktop == "gnome"
-    targets.gnome.enable = false;
+    targets.fish.enable = true;
+    targets.gnome.enable = config.mySystem.desktop == "gnome";
   };
 }
