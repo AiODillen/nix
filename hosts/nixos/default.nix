@@ -14,7 +14,7 @@
     ../../modules/nixos/stylix.nix
     ../../profiles/desktop/niri/nixos.nix
     ../../profiles/desktop/gnome/nixos.nix
-    ../../modules/nixos/gaming.nix
+    ../../profiles/gaming/nixos.nix
     ../../modules/nixos/storage.nix
   ];
 
