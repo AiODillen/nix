@@ -55,12 +55,6 @@ lib.mkIf config.mySystem.theming.enable {
       };
     };
 
-    cursor = {
-      package = pkgs.catppuccin-cursors.mochaMauve;
-      name = "catppuccin-mocha-mauve-cursors";
-      size = 24;
-    };
-
     targets.fish.enable = true;
     targets.gnome.enable = config.mySystem.desktop == "gnome";
   };
