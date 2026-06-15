@@ -9,11 +9,13 @@
   programs.vesktop.enable = true;
   stylix.targets.vesktop.enable = true;
 
+  
+
+
   home.packages = with pkgs; [
+    faugus-launcher
     goverlay
     heroic
-    gpu-screen-recorder
-    gpu-screen-recorder-overlay
     protonplus
   ];
 }
