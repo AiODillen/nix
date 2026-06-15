@@ -14,6 +14,8 @@
     ../../modules/nixos/stylix.nix
     ../../modules/nixos/niri.nix
     ../../modules/nixos/gnome.nix
+    ../../modules/nixos/gaming.nix
+    ../../modules/nixos/storage.nix
   ];
 
   # ── DE SWITCH ──────────────────────────────────────────────
