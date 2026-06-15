@@ -1,12 +1,19 @@
 { pkgs, ... }:
 {
+  # Stylix theming for home apps
+  stylix.targets.mangohud.enable = true;
+  stylix.targets.qt.enable = true;
+
+  programs.mangohud.enable = true;
+
+  programs.vesktop.enable = true;
+  stylix.targets.vesktop.enable = true;
+
   home.packages = with pkgs; [
-    mangohud
     goverlay
     heroic
-    discord
     gpu-screen-recorder
-    gpu-screen-recorder-ui
+    gpu-screen-recorder-overlay
     protonplus
   ];
 }
