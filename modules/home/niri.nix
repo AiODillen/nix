@@ -70,6 +70,9 @@ lib.mkIf (osConfig.mySystem.desktop == "niri") {
         XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
         XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
         XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+
+        Mod+WheelScrollRight { focus-column-right; }
+        Mod+WheelScrollLeft { focus-column-left; }
     }
   '';
 
