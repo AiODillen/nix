@@ -15,6 +15,8 @@ lib.mkIf (osConfig.mySystem.desktop == "niri") {
             tap
             natural-scroll
         }
+        focus-follows-mouse
+        warp-mouse-to-focus
     }
 
     layout {
