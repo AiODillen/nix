@@ -8,5 +8,6 @@ lib.mkIf osConfig.mySystem.gaming.enable {
     goverlay
     heroic
     protonplus
+    r2modman
   ];
 }
