@@ -55,5 +55,8 @@
       name = "catppuccin-mocha-mauve-cursors";
       size = 24;
     };
+
+    # Disabled by default; modules/nixos/gnome.nix re-enables when desktop == "gnome"
+    targets.gnome.enable = false;
   };
 }
