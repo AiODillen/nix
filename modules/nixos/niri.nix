@@ -5,6 +5,11 @@ lib.mkIf (config.mySystem.desktop == "niri") {
     useNautilus = false;
   };
 
+  # xwayland-satellite provides on-demand XWayland support for niri (>= 25.08).
+  # Niri detects it in $PATH and automatically exports $DISPLAY, which is
+  # required for X11 apps such as Steam to start correctly.
+  environment.systemPackages = [ pkgs.xwayland-satellite ];
+
   services.greetd = {
     enable = true;
     settings.default_session = {
