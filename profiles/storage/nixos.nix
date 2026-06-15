@@ -1,5 +1,5 @@
-{ ... }:
-{
+{ config, lib, ... }:
+lib.mkIf config.mySystem.storage.automount.enable {
   fileSystems."/home/dillen/Grab" = {
     device = "/dev/sda1";
     fsType = "ext4";

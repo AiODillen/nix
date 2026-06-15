@@ -6,6 +6,7 @@
     ../../profiles/desktop/niri/home.nix
     ../../profiles/desktop/gnome/home.nix
     ../../profiles/gaming/home.nix
+    ../../profiles/shell/fish.nix
   ];
 
   home.username = "dillen";

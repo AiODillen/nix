@@ -14,7 +14,7 @@
     ../../profiles/desktop/niri/nixos.nix
     ../../profiles/desktop/gnome/nixos.nix
     ../../profiles/gaming/nixos.nix
-    ../../modules/nixos/storage.nix
+    ../../profiles/storage/nixos.nix
   ];
 
   # ── DE SWITCH ──────────────────────────────────────────────
