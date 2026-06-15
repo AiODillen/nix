@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 lib.mkIf (config.mySystem.desktop == "niri") {
   programs.niri = {
     enable = true;
@@ -11,5 +11,11 @@ lib.mkIf (config.mySystem.desktop == "niri") {
       command = "${config.programs.niri.package}/bin/niri-session";
       user = "dillen";
     };
+  };
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
+    config.niri.default = [ "gnome" "gtk" ];
   };
 }
