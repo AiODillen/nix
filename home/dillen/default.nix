@@ -3,7 +3,7 @@
   imports = [
     ../../profiles/core/home.nix
     ../../profiles/desktop/niri/home.nix
-    ../../modules/home/gnome.nix
+    ../../profiles/desktop/gnome/home.nix
   ];
 
   home.username = "dillen";

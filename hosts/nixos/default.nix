@@ -13,7 +13,7 @@
     ../../modules/nixos/disable-kmscon.nix
     ../../modules/nixos/stylix.nix
     ../../profiles/desktop/niri/nixos.nix
-    ../../modules/nixos/gnome.nix
+    ../../profiles/desktop/gnome/nixos.nix
     ../../modules/nixos/gaming.nix
     ../../modules/nixos/storage.nix
   ];
