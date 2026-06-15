@@ -75,4 +75,6 @@ binds {
 
     Mod+WheelScrollDown { focus-column-right; }
     Mod+WheelScrollUp { focus-column-left; }
+    Mod+D { focus-column-right; }
+    Mod+A { focus-column-left; }
 }

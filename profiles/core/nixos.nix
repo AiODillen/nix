@@ -24,8 +24,6 @@
   # Console (TTY) keyboard layout
   console.keyMap = "de-latin1-nodeadkeys";
 
-  services.printing.enable = true;
-
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -36,9 +34,12 @@
     wireplumber.enable = true;
   };
 
+  programs.fish.enable = true;
+
   users.users.dillen = {
     isNormalUser = true;
     description = "dillen";
+    shell = pkgs.fish;
     extraGroups = [
       "networkmanager"
       "wheel"
@@ -52,6 +53,8 @@
     git
     micro
     claude-code
+    gram
+    r2modman
   ];
 
   system.stateVersion = "26.05";
