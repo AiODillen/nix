@@ -37,16 +37,22 @@
         ];
       };
 
-      checks.x86_64-linux.niri-config =
+      checks.x86_64-linux =
         let
-          cfg = self.nixosConfigurations.nixos.config
-                  .home-manager.users.dillen
-                  .xdg.configFile."niri/config.kdl".text;
+          cfg = self.nixosConfigurations.nixos.config.mySystem;
         in
-        pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
-          echo ${pkgs.lib.escapeShellArg cfg} > config.kdl
-          niri validate --config config.kdl
-          touch $out
-        '';
+        nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
+          niri-config =
+            let
+              kdl = self.nixosConfigurations.nixos.config
+                      .home-manager.users.dillen
+                      .xdg.configFile."niri/config.kdl".text;
+            in
+            pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
+              echo ${pkgs.lib.escapeShellArg kdl} > config.kdl
+              niri validate --config config.kdl
+              touch $out
+            '';
+        };
     };
 }
