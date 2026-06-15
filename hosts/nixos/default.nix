@@ -33,6 +33,7 @@
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "hm-backup";
     extraSpecialArgs = { inherit inputs; };
     users.dillen = import ../../users/dillen/default.nix;
   };
