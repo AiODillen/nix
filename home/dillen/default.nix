@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ../../modules/home/common.nix
+    ../../profiles/core/home.nix
     ../../modules/home/niri.nix
     ../../modules/home/gnome.nix
   ];

@@ -9,7 +9,7 @@
   imports = [
     ./hardware.nix
     ../../modules/options.nix
-    ../../modules/nixos/common.nix
+    ../../profiles/core/nixos.nix
     ../../modules/nixos/disable-kmscon.nix
     ../../modules/nixos/stylix.nix
     ../../modules/nixos/niri.nix
