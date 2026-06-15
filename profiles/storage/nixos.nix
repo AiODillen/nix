@@ -1,7 +1,7 @@
 { config, lib, ... }:
 lib.mkIf config.mySystem.storage.automount.enable {
   fileSystems."/home/dillen/Grab" = {
-    device = "/dev/sda1";
+    device = "/dev/sdb1";
     fsType = "ext4";
     options = [ "nofail" "x-systemd.automount" "x-systemd.idle-timeout=600" ];
   };
