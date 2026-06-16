@@ -23,16 +23,20 @@ lib.mkIf osConfig.mySystem.ai.enable {
     Use `/caveman` to activate compressed response mode explicitly.
   '';
 
+  home.sessionPath = [ "$HOME/.npm-global/bin" ];
+
   home.activation.installNpmTools = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if ! command -v codegraph >/dev/null 2>&1 || ! command -v repomix >/dev/null 2>&1; then
-      $DRY_RUN_CMD ${pkgs.nodejs}/bin/npm install -g @colbymchenry/codegraph repomix
+    _npm_global="$HOME/.npm-global"
+    if [ ! -f "$_npm_global/bin/codegraph" ] || [ ! -f "$_npm_global/bin/repomix" ]; then
+      $DRY_RUN_CMD ${pkgs.nodejs}/bin/npm install -g --prefix "$_npm_global" @colbymchenry/codegraph repomix
     fi
   '';
 
   home.activation.registerCodegraphMcp = lib.hm.dag.entryAfter ["installNpmTools"] ''
-    if command -v claude >/dev/null 2>&1 && command -v codegraph >/dev/null 2>&1; then
+    _codegraph="$HOME/.npm-global/bin/codegraph"
+    if command -v claude >/dev/null 2>&1 && [ -f "$_codegraph" ]; then
       if ! claude mcp list 2>/dev/null | grep -q "codegraph"; then
-        $DRY_RUN_CMD claude mcp add codegraph -s user -- codegraph serve --mcp
+        $DRY_RUN_CMD claude mcp add codegraph -s user -- "$_codegraph" serve --mcp
       fi
     fi
   '';
