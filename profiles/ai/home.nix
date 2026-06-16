@@ -34,27 +34,25 @@ lib.mkIf osConfig.mySystem.ai.enable {
 
   home.activation.registerCodegraphMcp = lib.hm.dag.entryAfter ["installNpmTools"] ''
     _codegraph="$HOME/.npm-global/bin/codegraph"
-    if command -v claude >/dev/null 2>&1 && [ -f "$_codegraph" ]; then
-      if ! claude mcp list 2>/dev/null | grep -q "codegraph"; then
-        $DRY_RUN_CMD claude mcp add codegraph -s user -- "$_codegraph" serve --mcp
+    _claude="/run/current-system/sw/bin/claude"
+    if [ -x "$_claude" ] && [ -f "$_codegraph" ]; then
+      if ! "$_claude" mcp list 2>/dev/null | grep -q "codegraph"; then
+        $DRY_RUN_CMD "$_claude" mcp add codegraph -s user -- "$_codegraph" serve --mcp
       fi
     fi
   '';
 
   home.activation.installCaveman = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if [ ! -d "$HOME/.claude/plugins/caveman" ]; then
-      if command -v claude >/dev/null 2>&1; then
-        $DRY_RUN_CMD claude plugin marketplace add JuliusBrussee/caveman
-        $DRY_RUN_CMD claude plugin install caveman@caveman
-      fi
+    _claude="/run/current-system/sw/bin/claude"
+    if [ -x "$_claude" ] && ! grep -q '"caveman"' "$HOME/.claude/plugins/installed_plugins.json" 2>/dev/null; then
+      $DRY_RUN_CMD "$_claude" plugin marketplace add JuliusBrussee/caveman || true
+      $DRY_RUN_CMD "$_claude" plugin install caveman@caveman || true
     fi
   '';
 
   home.activation.initRtk = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if command -v rtk >/dev/null 2>&1; then
-      if ! grep -q "rtk-rewrite" "$HOME/.claude/settings.json" 2>/dev/null; then
-        $DRY_RUN_CMD ${pkgs.rtk}/bin/rtk init -g
-      fi
+    if ! grep -q "rtk-rewrite" "$HOME/.claude/settings.json" 2>/dev/null; then
+      $DRY_RUN_CMD ${pkgs.rtk}/bin/rtk init -g
     fi
   '';
 }
