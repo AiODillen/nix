@@ -52,7 +52,6 @@
   environment.systemPackages = with pkgs; [
     git
     micro
-    claude-code
     gram
     r2modman
   ];
