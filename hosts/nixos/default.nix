@@ -15,12 +15,14 @@
     ../../profiles/desktop/gnome/nixos.nix
     ../../profiles/gaming/nixos.nix
     ../../profiles/storage/nixos.nix
+    ../../profiles/ai/nixos.nix
   ];
 
   # ── DE SWITCH ──────────────────────────────────────────────
   # Change to "gnome" and run: sudo nixos-rebuild switch --flake ~/nixos-config#nixos
   mySystem = {
     desktop = "niri";
+    ai.enable = true;
     gaming.enable = true;
     theming.enable = true;
     storage.automount.enable = true;
