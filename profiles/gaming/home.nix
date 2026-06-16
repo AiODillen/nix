@@ -10,4 +10,12 @@ lib.mkIf osConfig.mySystem.gaming.enable {
     protonplus
     r2modman
   ];
+
+  xdg.desktopEntries.steam-gamescope = {
+    name = "Steam (Gamescope)";
+    exec = "steam-gamescope";
+    icon = "steam";
+    comment = "Steam via Gamescope — all games run inside gamescope";
+    categories = [ "Game" ];
+  };
 }
