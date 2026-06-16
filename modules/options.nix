@@ -10,6 +10,8 @@
       description = "Which desktop environment to enable. Change and run nixos-rebuild switch.";
     };
 
+    ai.enable = lib.mkEnableOption "AI profile (Claude Code, rtk, codegraph, caveman, repomix)";
+
     gaming.enable = lib.mkEnableOption "gaming profile (Steam, gamescope, gaming home apps)";
 
     theming.enable = lib.mkEnableOption "stylix theming profile (system + home)";
