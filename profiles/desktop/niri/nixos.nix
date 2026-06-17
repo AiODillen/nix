@@ -12,6 +12,7 @@ lib.mkIf (config.mySystem.desktop == "niri") {
     pkgs.xwayland-satellite
     pkgs.nautilus
     pkgs.gnome-disk-utility
+    pkgs.pavucontrol
   ];
 
   services.greetd = {
