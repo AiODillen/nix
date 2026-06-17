@@ -34,5 +34,8 @@ lib.mkIf (config.mySystem.desktop == "niri") {
   programs.appimage = {
     enable = true;
     binfmt = true;
+    package = pkgs.appimage-run.override {
+      extraPkgs = p: [ p.icu ];
+    };
   };
 }
