@@ -28,4 +28,11 @@ lib.mkIf (config.mySystem.desktop == "niri") {
     extraPortals = [ pkgs.xdg-desktop-portal-gnome ];
     config.niri.default = [ "gnome" "gtk" ];
   };
+
+  services.flatpak.enable = true;
+
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
 }

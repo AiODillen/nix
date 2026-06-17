@@ -13,7 +13,7 @@ lib.mkIf osConfig.mySystem.gaming.enable {
 
   xdg.desktopEntries.steam-gamescope = {
     name = "Steam (Gamescope)";
-    exec = "steam-gamescope";
+    exec = "${pkgs.libcap}/bin/capsh --clear=a -- -c steam-gamescope";
     icon = "steam";
     comment = "Steam via Gamescope — all games run inside gamescope";
     categories = [ "Game" ];
