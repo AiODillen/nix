@@ -6,6 +6,7 @@ output "*" {
 
 input {
     keyboard {
+        numlock true
         xkb {
             layout "de"
             variant "nodeadkeys"
