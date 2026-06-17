@@ -34,14 +34,26 @@
     wireplumber.enable = true;
   };
 
+  programs.fish.enable = true;
+
+  users.users.dillen = {
+    isNormalUser = true;
+    description = "dillen";
+    shell = pkgs.fish;
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
+  };
+
   programs.firefox.enable = true;
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
     git
     micro
+    claude-code
     gram
-    r2modman
   ];
 
   system.stateVersion = "26.05";
