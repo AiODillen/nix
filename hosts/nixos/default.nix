@@ -10,12 +10,14 @@
     ./hardware.nix
     ../../modules/options.nix
     ../../profiles/core/nixos.nix
+    ../../profiles/shell/nixos.nix
     ../../profiles/theming/nixos.nix
     ../../profiles/desktop/niri/nixos.nix
     ../../profiles/desktop/gnome/nixos.nix
     ../../profiles/gaming/nixos.nix
     ../../profiles/storage/nixos.nix
     ../../profiles/ai/nixos.nix
+    ../../users/dillen/nixos.nix
   ];
 
   # ── DE SWITCH ──────────────────────────────────────────────

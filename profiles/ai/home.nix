@@ -8,6 +8,23 @@ let
     rev = cavemanRev;
     hash = "sha256-FbmfhFaPs/SnSZdfNdErdIUHXt1FfBzErpPpLy8kdIc=";
   };
+
+  # superpowers plugin lives in obra/superpowers; obra/superpowers-marketplace is
+  # only the marketplace index. Pin the plugin repo at the 6.0.2 release commit.
+  superpowersVersion = "6.0.2";
+  superpowersRev = "6efe32c9e2dd002d0c394e861e0529675d1ab32e";
+  superpowersSrc = pkgs.fetchFromGitHub {
+    owner = "obra";
+    repo = "superpowers";
+    rev = superpowersRev;
+    # Placeholder — first `nixos-rebuild switch` fails and prints the real hash.
+    # Paste the `got: sha256-...` value here and rebuild again.
+    hash = lib.fakeHash;
+  };
+
+  # Pinned npm tool versions (installed to ~/.npm-global; see installNpmTools).
+  codegraphVersion = "1.0.1";
+  repomixVersion = "1.14.1";
 in
 lib.mkIf osConfig.mySystem.ai.enable {
   # User instructions loaded by Claude Code on every session
@@ -73,7 +90,7 @@ lib.mkIf osConfig.mySystem.ai.enable {
   # Claude Code UI cannot persist changes here — edit this file and rebuild instead.
   home.file.".claude/settings.json".text = builtins.toJSON {
     enabledPlugins = {
-      "superpowers@claude-plugins-official" = true;
+      "superpowers@superpowers-marketplace" = true;
       "caveman@caveman" = true;
     };
     effortLevel = "high";
@@ -95,11 +112,16 @@ lib.mkIf osConfig.mySystem.ai.enable {
 
   home.sessionPath = [ "$HOME/.npm-global/bin" ];
 
-  # Install codegraph and repomix to user-local npm prefix (nix store is read-only)
+  # Install codegraph and repomix to user-local npm prefix (nix store is read-only).
+  # Versions are pinned; a version-stamp file forces reinstall when the pins change.
   home.activation.installNpmTools = lib.hm.dag.entryAfter ["writeBoundary"] ''
     _npm_global="$HOME/.npm-global"
-    if [ ! -f "$_npm_global/bin/codegraph" ] || [ ! -f "$_npm_global/bin/repomix" ]; then
-      $DRY_RUN_CMD ${pkgs.nodejs}/bin/npm install -g --prefix "$_npm_global" @colbymchenry/codegraph repomix
+    _stamp="$_npm_global/.nix-versions"
+    _want="@colbymchenry/codegraph@${codegraphVersion} repomix@${repomixVersion}"
+    if [ ! -f "$_npm_global/bin/codegraph" ] || [ ! -f "$_npm_global/bin/repomix" ] \
+       || [ "$(cat "$_stamp" 2>/dev/null)" != "$_want" ]; then
+      $DRY_RUN_CMD ${pkgs.nodejs}/bin/npm install -g --prefix "$_npm_global" $_want
+      $DRY_RUN_CMD ${pkgs.coreutils}/bin/tee "$_stamp" > /dev/null <<< "$_want"
     fi
   '';
 
@@ -119,6 +141,51 @@ lib.mkIf osConfig.mySystem.ai.enable {
       fi
       $DRY_RUN_CMD mv "$_tmp" "$_claude"
     fi
+  '';
+
+  # Copy superpowers plugin files from nix store to a writable path so Claude can
+  # create .in_use/ lock files and other runtime state alongside the plugin files
+  home.activation.installSuperpowersPlugin = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    _dst="$HOME/.claude/plugins/cache/superpowers-marketplace/superpowers/${superpowersVersion}"
+    if [ ! -f "$_dst/.claude-plugin/plugin.json" ]; then
+      $DRY_RUN_CMD rm -rf "$_dst"
+      $DRY_RUN_CMD mkdir -p "$(dirname "$_dst")"
+      $DRY_RUN_CMD cp -r "${superpowersSrc}" "$_dst"
+      $DRY_RUN_CMD chmod -R u+w "$_dst"
+    fi
+  '';
+
+  # Always ensure superpowers is registered in installed_plugins.json (merge, don't replace)
+  home.activation.registerSuperpowersPlugin = lib.hm.dag.entryAfter ["installSuperpowersPlugin"] ''
+    _installed="$HOME/.claude/plugins/installed_plugins.json"
+    _dst="$HOME/.claude/plugins/cache/superpowers-marketplace/superpowers/${superpowersVersion}"
+    _tmp=$(mktemp)
+    if [ -f "$_installed" ]; then
+      ${pkgs.jq}/bin/jq --arg path "$_dst" \
+        '.plugins["superpowers@superpowers-marketplace"] = [{"scope":"user","installPath":$path,"version":"${superpowersVersion}","installedAt":"2026-06-16T00:00:00.000Z","lastUpdated":"2026-06-16T00:00:00.000Z","gitCommitSha":"${superpowersRev}"}]' \
+        "$_installed" > "$_tmp"
+    else
+      mkdir -p "$(dirname "$_installed")"
+      printf '{"version":2,"plugins":{"superpowers@superpowers-marketplace":[{"scope":"user","installPath":"%s","version":"${superpowersVersion}","installedAt":"2026-06-16T00:00:00.000Z","lastUpdated":"2026-06-16T00:00:00.000Z","gitCommitSha":"${superpowersRev}"}]}}\n' \
+        "$_dst" > "$_tmp"
+    fi
+    $DRY_RUN_CMD mv "$_tmp" "$_installed"
+  '';
+
+  # Always ensure superpowers marketplace is registered in known_marketplaces.json (merge, don't replace)
+  home.activation.registerSuperpowersMarketplace = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    _marketplaces="$HOME/.claude/plugins/known_marketplaces.json"
+    _tmp=$(mktemp)
+    if [ -f "$_marketplaces" ]; then
+      ${pkgs.jq}/bin/jq --arg loc "$HOME/.claude/plugins/marketplaces/superpowers-marketplace" \
+        '."superpowers-marketplace" = {"source":{"source":"github","repo":"obra/superpowers-marketplace"},"installLocation":$loc,"lastUpdated":"2026-06-16T00:00:00.000Z"}' \
+        "$_marketplaces" > "$_tmp"
+    else
+      mkdir -p "$(dirname "$_marketplaces")"
+      printf '{"superpowers-marketplace":{"source":{"source":"github","repo":"obra/superpowers-marketplace"},"installLocation":"%s/.claude/plugins/marketplaces/superpowers-marketplace","lastUpdated":"2026-06-16T00:00:00.000Z"}}\n' \
+        "$HOME" > "$_tmp"
+    fi
+    $DRY_RUN_CMD mv "$_tmp" "$_marketplaces"
   '';
 
   # Copy caveman plugin files from nix store to a writable path so Claude can
