@@ -11,8 +11,6 @@ lib.mkIf config.mySystem.gaming.enable {
         "-r" "175"
         "-f"
         "--adaptive-sync"
-        "-F" "fsr"
-        "--sharpness" "5"
         "--rt"
         "--expose-wayland"
         "--xwayland-count" "2"
