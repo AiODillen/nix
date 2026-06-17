@@ -17,6 +17,7 @@
     ../../profiles/gaming/nixos.nix
     ../../profiles/storage/nixos.nix
     ../../profiles/ai/nixos.nix
+    ../../profiles/local-ai/nixos.nix
     ../../users/dillen/nixos.nix
   ];
 
@@ -26,6 +27,7 @@
     desktop = "niri";
     ai.enable = true;
     gaming.enable = true;
+    localAi.enable = true;
     theming.enable = true;
     storage.automount.enable = true;
   };

@@ -14,6 +14,8 @@
 
     gaming.enable = lib.mkEnableOption "gaming profile (Steam, gamescope, gaming home apps)";
 
+    localAi.enable = lib.mkEnableOption "local AI profile (Ollama ROCm, Open WebUI, ROCm tools)";
+
     theming.enable = lib.mkEnableOption "stylix theming profile (system + home)";
 
     storage.automount.enable = lib.mkEnableOption "automount profile (extra filesystems under /home/dillen)";
