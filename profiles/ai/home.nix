@@ -17,9 +17,7 @@ let
     owner = "obra";
     repo = "superpowers";
     rev = superpowersRev;
-    # Placeholder — first `nixos-rebuild switch` fails and prints the real hash.
-    # Paste the `got: sha256-...` value here and rebuild again.
-    hash = lib.fakeHash;
+    hash = "sha256-0WupTacT1jIwVBloj1i0RF7wIllVtP8eMPRl7VrXdbE=";
   };
 
   # Pinned npm tool versions (installed to ~/.npm-global; see installNpmTools).
