@@ -34,18 +34,6 @@
     wireplumber.enable = true;
   };
 
-  programs.fish.enable = true;
-
-  users.users.dillen = {
-    isNormalUser = true;
-    description = "dillen";
-    shell = pkgs.fish;
-    extraGroups = [
-      "networkmanager"
-      "wheel"
-    ];
-  };
-
   programs.firefox.enable = true;
   nixpkgs.config.allowUnfree = true;
 
