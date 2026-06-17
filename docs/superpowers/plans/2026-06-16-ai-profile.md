@@ -6,7 +6,16 @@
 
 **Architecture:** A new `mySystem.ai.enable` option gates `profiles/ai/nixos.nix` (system packages) and `profiles/ai/home.nix` (CLAUDE.md + idempotent activation scripts for npm tools, MCP registration, caveman plugin, and rtk init). Follows the exact same opt-in pattern as `gaming` and `theming` profiles.
 
-**Tech Stack:** NixOS 26.05, home-manager, nixpkgs (`rtk`), npm (`@colbymchenry/codegraph`, `repomix`), Claude Code plugin system (`caveman`).
+**Tech Stack:** NixOS 26.05, home-manager, nixpkgs (`rtk`), npm (`@colbymchenry/codegraph`, `repomix`), Claude Code plugin system (`caveman`, `superpowers`).
+
+---
+
+> **As-built (diverged from the steps below):** The activation approach changed during implementation. The plan's `claude plugin install` / `claude mcp add` / `rtk init -g` commands were replaced with a fully declarative approach — see the design spec for current behaviour:
+> - `settings.json`, `CLAUDE.md`, `RTK.md` owned via `home.file` (read-only store symlinks); the rtk hook is baked in as `rtk hook claude`, not added by `rtk init -g`.
+> - `caveman` **and** `superpowers` are pinned via `fetchFromGitHub`, copied into the plugin cache, and registered by `jq`-merging `installed_plugins.json` / `known_marketplaces.json`.
+> - `codegraph` MCP is registered by `jq`-merging `~/.claude.json` (not `claude mcp add`).
+> - npm tool versions are pinned with a `.nix-versions` stamp; `nix-ld` + libraries added for codegraph's native addons.
+> - `superpowersSrc` uses `lib.fakeHash` — first rebuild fails and prints the real hash to paste in.
 
 ---
 

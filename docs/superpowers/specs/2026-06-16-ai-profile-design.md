@@ -5,7 +5,7 @@
 
 ## Goal
 
-Create a dedicated `profiles/ai` NixOS profile module that installs and configures Claude Code and its supporting AI tooling: `rtk` (command proxy), `codegraph` (semantic MCP server), `caveman` (response compression skill), and `repomix` (repo packing). Move `claude-code` out of the `core` profile so AI tooling is opt-in. Manage a global `~/.claude/CLAUDE.md` that instructs Claude how to use all installed tools.
+Create a dedicated `profiles/ai` NixOS profile module that installs and configures Claude Code and its supporting AI tooling: `rtk` (command proxy), `codegraph` (semantic MCP server), `caveman` (response compression skill), `superpowers` (core skills library), and `repomix` (repo packing). Move `claude-code` out of the `core` profile so AI tooling is opt-in. Manage a global `~/.claude/CLAUDE.md` that instructs Claude how to use all installed tools.
 
 ## Background
 
@@ -34,7 +34,11 @@ MCP server providing pre-indexed semantic code intelligence. Claude calls `codeg
 
 ### caveman — Claude Code plugin (`JuliusBrussee/caveman`)
 
-Claude Code skill that compresses AI response tokens by ~65% using terse "caveman" output style. Installed as a Claude Code marketplace plugin via `claude plugin marketplace add JuliusBrussee/caveman`. Triggered via `/caveman` or the global CLAUDE.md instruction to default to terse output.
+Claude Code skill that compresses AI response tokens by ~65% using terse "caveman" output style. Pinned via `fetchFromGitHub` (rev + hash) and copied into the writable plugin cache, then registered in `installed_plugins.json` + `known_marketplaces.json` by activation scripts. Triggered via `/caveman` or the global CLAUDE.md instruction to default to terse output.
+
+### superpowers — Claude Code plugin (`obra/superpowers` via `obra/superpowers-marketplace`)
+
+Core skills library (TDD, debugging, brainstorming, planning, collaboration workflows). The plugin source is `obra/superpowers`; `obra/superpowers-marketplace` is only the marketplace index. Provisioned the same way as caveman: `fetchFromGitHub` pin of `obra/superpowers` at the release commit, copy into the plugin cache, register `superpowers@superpowers-marketplace` in `installed_plugins.json` and the `superpowers-marketplace` entry in `known_marketplaces.json`. Enabled via `enabledPlugins` in the declaratively-owned `settings.json`.
 
 ### repomix — npm (`repomix`)
 
@@ -47,6 +51,11 @@ Fully standalone (no API keys, no accounts). Packs an entire repository into a s
 ```nix
 { config, lib, pkgs, ... }:
 lib.mkIf config.mySystem.ai.enable {
+  programs.nix-ld.enable = true;
+  # codegraph's prebuilt native node addons (tree-sitter, better-sqlite3)
+  # dynamically link against these at runtime under nix-ld.
+  programs.nix-ld.libraries = with pkgs; [ stdenv.cc.cc.lib zlib openssl ];
+
   environment.systemPackages = with pkgs; [
     claude-code
     rtk
@@ -55,25 +64,29 @@ lib.mkIf config.mySystem.ai.enable {
 }
 ```
 
-`rtk` is in nixpkgs. `nodejs` provides the npm runtime needed for codegraph, caveman, and repomix installs. `claude-code` moves here from `core`.
+`rtk` is in nixpkgs. `nodejs` provides the npm runtime needed for codegraph and repomix installs. `claude-code` moves here from `core`. `nix-ld` is required so the prebuilt npm native binaries run on NixOS.
 
 ### `profiles/ai/home.nix`
 
-`codegraph`, `caveman`, and `repomix` cannot be packaged cleanly from nixpkgs (not yet in the package set). They are installed via `home.activation` scripts that run during `nixos-rebuild switch`. Each script is idempotent — it checks whether the tool is already present before running.
+`codegraph` and `repomix` are not in nixpkgs; they install to a user-local npm prefix (`~/.npm-global`) via a `home.activation` script. `caveman` and `superpowers` are Claude Code plugins, pinned via `fetchFromGitHub` and copied from the nix store into the writable plugin cache, then registered via `jq`-merged JSON.
 
-Claude Code manages `~/.claude/settings.json` itself; the activation scripts append to it (via `rtk init -g` and the caveman installer) rather than home-manager owning the file, avoiding conflicts.
+`settings.json`, `CLAUDE.md`, and `RTK.md` are **owned declaratively** by home-manager (`home.file`). `settings.json` carries `enabledPlugins`, `effortLevel`, `theme`, and the rtk `PreToolUse` hook (`rtk hook claude`, which reads the tool-call JSON from stdin). Because the file is a read-only store symlink, changes made through the Claude Code UI cannot persist — edit the nix file and rebuild.
+
+MCP and plugin registries live in separate JSON files Claude Code writes to at runtime (`~/.claude.json`, `~/.claude/plugins/*.json`); activation scripts `jq`-merge into them rather than overwriting, preserving runtime state.
 
 #### Activation scripts
 
-**`installNpmTools`** — runs `npm install -g @colbymchenry/codegraph repomix` if either binary is missing from PATH.
+**`installNpmTools`** — `npm install -g --prefix ~/.npm-global @colbymchenry/codegraph@<ver> repomix@<ver>` with pinned versions. A `.nix-versions` stamp file forces reinstall when the pins change.
 
-**`registerCodegraphMcp`** — runs `claude mcp add codegraph -s user -- codegraph serve --mcp` if `claude mcp list` does not already show a `codegraph` entry.
+**`registerCodegraphMcp`** — `jq`-sets `.mcpServers.codegraph` in `~/.claude.json` to run `codegraph serve --mcp` (runs every switch).
 
-**`installCaveman`** — runs `claude plugin marketplace add JuliusBrussee/caveman && claude plugin install caveman@caveman` if the caveman plugin directory is absent from `~/.claude/plugins/`.
+**`installSuperpowersPlugin` / `registerSuperpowersPlugin` / `registerSuperpowersMarketplace`** — copy pinned `obra/superpowers` into the cache; merge `superpowers@superpowers-marketplace` into `installed_plugins.json` and `superpowers-marketplace` into `known_marketplaces.json`.
 
-**`initRtk`** — runs `rtk init -g` if the `rtk-rewrite` hook string is absent from `~/.claude/settings.json`.
+**`installCavemanPlugin` / `registerCavemanPlugin` / `registerCavemanMarketplace`** — same pattern for `JuliusBrussee/caveman`.
 
-All four use `lib.hm.dag.entryAfter ["writeBoundary"]`.
+All use `lib.hm.dag.entryAfter` (`installNpmTools`/`install*Plugin`/`register*Marketplace` after `writeBoundary`; `register*Plugin` after their install step; `registerCodegraphMcp` after `installNpmTools`).
+
+> **Pin hash note:** `superpowersSrc` ships with `lib.fakeHash` as a placeholder. The first `nixos-rebuild switch` fails and prints the real `got: sha256-…`; paste it into `home.nix` and rebuild again.
 
 ### Global CLAUDE.md — `~/.claude/CLAUDE.md`
 
