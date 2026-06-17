@@ -38,4 +38,5 @@ lib.mkIf config.mySystem.gaming.enable {
   };
 
   hardware.steam-hardware.enable = true;
+  hardware.xone.enable = true;
 }
