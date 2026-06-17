@@ -39,4 +39,9 @@ lib.mkIf config.mySystem.gaming.enable {
 
   hardware.steam-hardware.enable = true;
   hardware.xone.enable = true;
+
+  services.lact.enable = true;
+  hardware.amdgpu.overdrive.enable = true;
+
+  programs.coolercontrol.enable = true;
 }

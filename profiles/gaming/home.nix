@@ -24,7 +24,6 @@ lib.mkIf osConfig.mySystem.gaming.enable {
   programs.vesktop.enable = true;
 
   home.packages = with pkgs; [
-    coolercontrol
     faugus-launcher
     goverlay
     heroic
