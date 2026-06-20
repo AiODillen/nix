@@ -1,15 +1,24 @@
-{ lib, osConfig, pkgs, ... }:
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
+}:
 let
+  res = osConfig.mySystem.gaming.gamescope;
   # The gamescope security wrapper (capSysNice=true) injects cap_sys_nice into
   # the inheritable set. bwrap 0.11+ rejects any non-zero capability sets.
   # Fix: pass capsh as the "steam" command after gamescope's --, so caps are
   # cleared right before bwrap runs, inside the gamescope session.
+  # `-r` is intentionally omitted: it locks gamescope to a fixed refresh and
+  # disables --adaptive-sync (gamescope issue #975). VRR adapts naturally; cap
+  # fps in-game or via MangoHud if needed.
   steam-gamescope = pkgs.writeShellScriptBin "steam-gamescope" ''
     exec gamescope --steam \
-      -W 3440 -H 1440 \
-      -r 175 \
+      -W ${toString res.width} -H ${toString res.height} \
       -f \
       --adaptive-sync \
+      --force-grab-cursor \
       --rt \
       --expose-wayland \
       --xwayland-count 2 \

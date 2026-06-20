@@ -1,22 +1,20 @@
 { config, lib, pkgs, ... }:
-lib.mkIf config.mySystem.localAi.enable {
-  # ROCm OpenCL runtime — exposes GPU to compute workloads (llama.cpp, ollama, etc.)
+let
+  cfg = config.mySystem;
+in
+lib.mkIf cfg.localAi.enable {
   hardware.graphics.extraPackages = [ pkgs.rocmPackages.clr ];
 
-  # GPU device nodes require membership in these groups
-  users.users.dillen.extraGroups = [ "render" "video" ];
+  users.users.${cfg.user.name}.extraGroups = [ "render" "video" ];
 
-  # Ollama: LLM inference server with ROCm acceleration.
-  # 7900 XTX = NAVI31 = gfx1100 — officially supported, override ensures detection.
   services.ollama = {
     enable = true;
     package = pkgs.ollama-rocm;
-    rocmOverrideGfx = "11.0.0";
+    rocmOverrideGfx = cfg.localAi.rocmGfx;
     host = "127.0.0.1";
     port = 11434;
   };
 
-  # Open WebUI: full-featured chat UI over ollama's API, served locally.
   services.open-webui = {
     enable = true;
     host = "127.0.0.1";
@@ -28,7 +26,7 @@ lib.mkIf config.mySystem.localAi.enable {
   };
 
   environment.systemPackages = with pkgs; [
-    rocmPackages.rocminfo  # verify GPU is detected by ROCm
-    rocmPackages.rocm-smi  # monitor GPU utilisation during inference
+    rocmPackages.rocminfo
+    rocmPackages.rocm-smi
   ];
 }

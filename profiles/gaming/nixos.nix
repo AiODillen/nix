@@ -4,26 +4,13 @@ lib.mkIf config.mySystem.gaming.enable {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = false;
-    gamescopeSession = {
-      enable = true;
-      args = [
-        "-W" "3440" "-H" "1440"
-        "-r" "175"
-        "-f"
-        "--adaptive-sync"
-        "--rt"
-        "--expose-wayland"
-        "--xwayland-count" "2"
-        "--mangoapp"
-      ];
-    };
   };
 
   programs.gamescope = {
     enable = true;
     capSysNice = true;
     env = {
-      XKB_DEFAULT_LAYOUT = "de";
+      XKB_DEFAULT_LAYOUT = config.mySystem.locale.xkbLayout;
     };
   };
 

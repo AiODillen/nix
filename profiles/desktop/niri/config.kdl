@@ -8,8 +8,8 @@ input {
     keyboard {
         numlock true
         xkb {
-            layout "de"
-            variant "nodeadkeys"
+            layout "@XKB_LAYOUT@"
+            variant "@XKB_VARIANT@"
         }
     }
     touchpad {
@@ -28,6 +28,13 @@ layout {
         active-color "#cba6f7"
         inactive-color "#313244"
     }
+}
+
+// Force VRR on for gamescope-hosted windows, regardless of content-type hint.
+// app-id "gamescope" covers both steam-gamescope and standalone gamescope -- <game>.
+window-rule {
+    match app-id="gamescope"
+    variable-refresh-rate true
 }
 
 spawn-at-startup "waybar"
@@ -72,10 +79,23 @@ binds {
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
-    XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMute        allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+
+    XF86AudioPlay  allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioPause allow-when-locked=true { spawn "playerctl" "play-pause"; }
+    XF86AudioNext  allow-when-locked=true { spawn "playerctl" "next"; }
+    XF86AudioPrev  allow-when-locked=true { spawn "playerctl" "previous"; }
+    XF86AudioStop  allow-when-locked=true { spawn "playerctl" "stop"; }
+
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "set" "5%+"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "set" "5%-"; }
 
     Mod+WheelScrollDown { focus-column-right; }
     Mod+WheelScrollUp { focus-column-left; }
     Mod+D { focus-column-right; }
     Mod+A { focus-column-left; }
+
+    Mod+S { focus-workspace-down; }
+    Mod+W { focus-workspace-up; }
 }

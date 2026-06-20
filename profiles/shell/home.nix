@@ -3,7 +3,8 @@
   programs.fish = {
     enable = true;
     shellAliases = {
-      rebuild = "sudo nixos-rebuild switch --flake ~/nixos-config/.#nixos";
+      # nixos-rebuild auto-detects the current hostname → no #hostname suffix needed
+      rebuild = "sudo nixos-rebuild switch --flake ~/nixos-config";
     };
   };
 }

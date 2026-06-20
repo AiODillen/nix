@@ -204,6 +204,10 @@
       "inputs": {
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
+        "nur": [
+          "stylix",
+          "nur"
+        ],
         "stylix": "stylix"
       }
     },

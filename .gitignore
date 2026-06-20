@@ -1,0 +1,7 @@
+result
+result-*
+repomix-output.xml
+.codegraph/
+.direnv/
+*.swp
+*.bak
