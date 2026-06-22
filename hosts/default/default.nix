@@ -63,7 +63,7 @@
     };
 
     # ── Profiles (toggle features) ───────────────────────────────────────────
-    ai.enable = true; # Claude Code, rtk, codegraph, nix-ld
+    ai.enable = false; # Claude Code, rtk, codegraph, nix-ld
 
     theming = {
       enable = true;
@@ -117,7 +117,7 @@
     };
 
     gaming = {
-      enable = true;
+      enable = false;
       gamescope = {
         width = 3440;
         height = 1440;
@@ -125,12 +125,12 @@
     };
 
     localAi = {
-      enable = true;
+      enable = false;
       rocmGfx = "11.0.0"; # 7900 XTX=11.0.0, 7800/7700 XT=11.0.1, 6900 XT=10.3.0
     };
 
     storage.automount = {
-      enable = true;
+      enable = false;
       mounts = [
         {
           path = "Grab";

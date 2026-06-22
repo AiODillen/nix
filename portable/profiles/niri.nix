@@ -1,14 +1,31 @@
-{ config, lib, pkgs, settings, ... }:
+{ config, lib, pkgs, inputs, settings, ... }:
 let
   colors = config.lib.stylix.colors;
   renderedKdl = lib.replaceStrings
     [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
     [ settings.xkbLayout settings.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
     (builtins.readFile ../../profiles/desktop/niri/config.kdl);
+
+  # nixGL Mesa shims — non-NixOS has no /run/opengl-driver, so nix GPU apps
+  # can't find the system driver. These wrap a program with the right libs.
+  # "Intel" is a misnomer: these are the Mesa wrappers (cover AMD/Intel).
+  nixgl = inputs.nixgl.packages.${pkgs.stdenv.hostPlatform.system};
+  nixGLIntel = nixgl.nixGLIntel;
+  nixVulkanIntel = nixgl.nixVulkanIntel;
+
+  # Launch niri under both shims so its GL + Vulkan renderers find the GPU.
+  # Stable profile path is referenced by the system session entry below.
+  niriSessionWrapped = pkgs.writeShellScriptBin "niri-session-nixgl" ''
+    exec ${nixGLIntel}/bin/nixGLIntel ${nixVulkanIntel}/bin/nixVulkanIntel \
+      ${pkgs.niri}/bin/niri-session "$@"
+  '';
 in
 lib.mkIf (settings.desktop == "niri") {
   home.packages = with pkgs; [
     niri
+    niriSessionWrapped   # nixGL-wrapped niri-session (used by the session entry)
+    nixGLIntel           # run other nix GPU apps as `nixGLIntel <app>`
+    nixVulkanIntel       # ...or `nixVulkanIntel <app>` for Vulkan apps (e.g. gram)
     xwayland-satellite   # on-demand XWayland; niri exports $DISPLAY when present
     nautilus
     gnome-disk-utility
@@ -50,13 +67,19 @@ lib.mkIf (settings.desktop == "niri") {
     ];
   };
 
-  # Make niri selectable in a distro display manager (greetd/portal/flatpak
-  # are NixOS-only and provided by the distro on a non-NixOS box).
+  # Wayland session entry. The greeter (LightDM/GDM/SDDM) only scans the system
+  # dir /usr/share/wayland-sessions, which home-manager cannot write. So this
+  # file is generated here and must be copied there once with root:
+  #
+  #   sudo cp ~/.local/share/wayland-sessions/niri.desktop /usr/share/wayland-sessions/
+  #
+  # Exec uses the stable ~/.nix-profile path (valid across rebuilds), and runs
+  # the nixGL-wrapped launcher so the compositor finds the GPU driver.
   xdg.dataFile."wayland-sessions/niri.desktop".text = ''
     [Desktop Entry]
-    Name=Niri
+    Name=Niri (nix)
     Comment=A scrollable-tiling Wayland compositor
-    Exec=${pkgs.niri}/bin/niri-session
+    Exec=${settings.homeDirectory}/.nix-profile/bin/niri-session-nixgl
     Type=Application
   '';
 }

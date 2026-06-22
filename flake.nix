@@ -15,6 +15,9 @@
     };
 
     nur.follows = "stylix/nur";
+
+    # GPU driver shim for running nix GUI apps on non-NixOS (standalone only).
+    nixgl.url = "github:nix-community/nixGL";
   };
 
   outputs =

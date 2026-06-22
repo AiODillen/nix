@@ -125,10 +125,28 @@ To drop a profile, remove its line from the `imports` list in
   it. `codegraph` + `repomix` install to `~/.npm-global` (added to PATH);
   first run needs network.
 
-- **niri** gets a `~/.local/share/wayland-sessions/niri.desktop` entry, so it
-  shows up in your display manager's session picker. XWayland apps (e.g. Steam)
-  work via `xwayland-satellite`. The session itself is launched by your distro's
-  login manager — greetd/portals/flatpak are NixOS-only and not ported.
+- **GPU apps need nixGL.** A non-NixOS box has no `/run/opengl-driver`, so
+  nix-built GL/Vulkan apps can't find the system driver ("no suitable graphics
+  adapter"). The niri profile installs the `nixGLIntel` (Mesa GL) and
+  `nixVulkanIntel` (Mesa Vulkan) wrappers — despite the name they cover AMD too.
+  Run a nix GUI app through the matching wrapper:
+
+  ```sh
+  nixGLIntel <app>        # OpenGL apps
+  nixVulkanIntel gram     # Vulkan apps
+  ```
+
+- **niri session:** the greeter (LightDM/GDM/SDDM) only scans the system dir
+  `/usr/share/wayland-sessions`, which home-manager can't write. The profile
+  generates the entry in your home; copy it there once with root:
+
+  ```sh
+  sudo cp ~/.local/share/wayland-sessions/niri.desktop /usr/share/wayland-sessions/
+  ```
+
+  Its `Exec` runs `~/.nix-profile/bin/niri-session-nixgl` — niri wrapped in both
+  nixGL shims so the compositor finds the GPU. XWayland apps (e.g. Steam) work
+  via `xwayland-satellite`. greetd/portals/flatpak are NixOS-only and not ported.
 
 - **Steam / gamescope** are not included (system-level). Install Steam via your
   distro; the gaming profile only carries the user-space helpers.
