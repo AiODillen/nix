@@ -4,6 +4,7 @@ let
 in
 {
   imports = [
+    ../modules/home/firefox-profile.nix
     ../profiles/core/home.nix
     ../profiles/theming/home.nix
     ../profiles/desktop/niri/home.nix

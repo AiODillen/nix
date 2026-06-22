@@ -1,6 +1,7 @@
 { settings, ... }:
 {
   imports = [
+    ../modules/home/firefox-profile.nix
     ./profiles/core.nix
     ./profiles/shell.nix
     ./profiles/locale.nix

@@ -41,6 +41,25 @@ lib.mkIf settings.theming {
 
   programs.firefox = {
     enable = true;
+    # HM 26.05 defaults firefox config to the XDG path
+    # ($XDG_CONFIG_HOME/mozilla/firefox) for stateVersion >= 26.05, but Firefox
+    # itself still reads ~/.mozilla/firefox — so the default would write profile
+    # data (theming, prefs) to a dir Firefox ignores. Pin the legacy path so HM
+    # manages the real profile dir. (Also silences the 26.05 migration warning.)
+    configPath = ".mozilla/firefox";
+    # Profile dir is the fixed name "default" (HM default = attr name) on every
+    # machine, so this is portable — no per-device random profile id. Installed
+    # extensions come from policies.ExtensionSettings below (same on all
+    # machines); HM only manages a profile's extensions/ dir when
+    # `extensions.packages` is set (it isn't here), so it never prunes manually-
+    # installed add-ons. `extensions.force` is required because stylix's
+    # colorTheme injects an `extensions.settings` entry (FirefoxColor); force
+    # only lets HM overwrite that one extension's browser-extension-data — it
+    # does not touch logins or other extensions' state (e.g. Proton Pass vault,
+    # which lives under storage/default/). The real wipe risk — HM repointing
+    # Firefox at an empty "default" dir on a machine whose data is in a random-
+    # named profile — is handled by ../../modules/home/firefox-profile.nix,
+    # which adopts the existing profile on first activation.
     profiles.default = {
       isDefault = true;
       extensions.force = true;
