@@ -68,6 +68,7 @@
       # externals. Connector names from `niri msg outputs`.
       monitors = {
         enable = true;
+        fallbackAllOn = true; # if no profile matches, enable all outputs (extended; not true mirror)
         profiles = [
           {
             name = "docked";

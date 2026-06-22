@@ -40,11 +40,19 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
   template's niri service drives, so it starts inside the niri session. Check it
   with `systemctl --user status kanshi`.
 
+  **Fallback:** with `monitors.fallbackAllOn = true` (default) a catch-all
+  `output "*" enable` profile is appended automatically, so if no configured
+  profile matches the connected set, every output is simply turned on (extended
+  desktop). This is "all on", **not** mirroring — niri/kanshi cannot clone
+  outputs declaratively (that would need `wl-mirror`). Set it `false` to leave
+  unmatched topologies to niri's own defaults.
+
   Known limitation: on hotplug niri briefly applies its own output defaults
   before kanshi corrects them, so a momentary flicker is possible
-  ([niri #676](https://github.com/niri-wm/niri/issues/676)). Also, if only some
-  of a profile's outputs are connected that profile won't match — add an
-  explicit profile for each partial-dock case you use.
+  ([niri #676](https://github.com/niri-wm/niri/issues/676)). If only some of a
+  profile's outputs are connected that profile won't match — it falls through to
+  the catch-all (all on); add an explicit profile for each partial-dock case you
+  want handled differently.
 
 ## Adding another machine
 

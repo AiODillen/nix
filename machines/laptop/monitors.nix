@@ -25,13 +25,29 @@ let
     // lib.optionalAttrs (o.position != null) { inherit (o) position; }
     // lib.optionalAttrs (o.mode != null) { inherit (o) mode; }
     // lib.optionalAttrs (o.transform != null) { inherit (o) transform; };
+
+  # Catch-all appended last: kanshi's "*" matches any output, so when none of
+  # the configured profiles fully match the connected set, this enables every
+  # output (extended desktop) instead of leaving them unmanaged. Not mirroring —
+  # niri/kanshi can't clone outputs declaratively.
+  fallback = lib.optional m.fallbackAllOn {
+    profile.name = "fallback-all-on";
+    profile.outputs = [
+      {
+        criteria = "*";
+        status = "enable";
+      }
+    ];
+  };
 in
 lib.mkIf m.enable {
   services.kanshi = {
     enable = true;
-    settings = map (p: {
-      profile.name = p.name;
-      profile.outputs = map mkOutput p.outputs;
-    }) m.profiles;
+    settings =
+      (map (p: {
+        profile.name = p.name;
+        profile.outputs = map mkOutput p.outputs;
+      }) m.profiles)
+      ++ fallback;
   };
 }

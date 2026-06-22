@@ -120,6 +120,18 @@
         # show only externals, list the internal panel with status = "disable"
         # in that profile (otherwise the compositor keeps it on).
         enable = lib.mkEnableOption "kanshi output switching (niri)";
+        fallbackAllOn = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = ''
+            Append a catch-all kanshi profile (`output "*" enable`) after the
+            configured profiles, so when no earlier profile matches the current
+            set of connected outputs, every output is simply enabled (extended
+            desktop) rather than left in an unmanaged state. Note: this is "all
+            on", not true mirroring — niri/kanshi cannot clone outputs
+            declaratively (that needs wl-mirror).
+          '';
+        };
         profiles = lib.mkOption {
           default = [ ];
           description = "Ordered list of kanshi profiles. Connector names from `niri msg outputs`.";
