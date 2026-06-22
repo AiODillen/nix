@@ -130,5 +130,14 @@ in
         }) cfg.profiles)
         ++ fallback;
     };
+
+    # HM's kanshi unit lists no restart trigger for its config file, so a
+    # config-only change (e.g. a new mode/refresh rate) leaves the unit
+    # unchanged and sd-switch won't restart the running daemon — it keeps the
+    # stale in-memory config. Tie the unit to the generated config's store path
+    # so `home-manager switch` restarts kanshi whenever the config changes.
+    systemd.user.services.kanshi.Unit.X-Restart-Triggers = [
+      config.xdg.configFile."kanshi/config".source
+    ];
   };
 }

@@ -5,7 +5,7 @@
 # this machine's profiles and enables them when the desktop is niri (kanshi
 # can't drive GNOME). Connector names from `niri msg outputs`.
 {
-  lib,
+
   settings,
   ...
 }:
@@ -28,7 +28,7 @@
             status = "enable";
             position = "0,0";
             scale = 1.0;
-            # mode = "3440x1440@100Hz";  # set refresh rate here
+            mode = "3440x1440@100Hz"; # set refresh rate here
             # adaptiveSync = true;       # VRR
           }
         ];
