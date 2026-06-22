@@ -102,7 +102,7 @@
       # │ gotham                            │ dark                            │
       # └───────────────────────────────────┴─────────────────────────────────┘
       # Full list: ls ${pkgs.base16-schemes}/share/themes/
-      scheme = "tokyo-night-dark";
+      scheme = "monokai";
       polarity = "dark"; # "dark" | "light" | "either" — must match scheme
       # wallpaper = ../../wallpaper.png;
     };

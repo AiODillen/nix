@@ -19,7 +19,6 @@ let
       -f \
       --adaptive-sync \
       --force-grab-cursor \
-      --rt \
       --expose-wayland \
       --xwayland-count 2 \
       --mangoapp \
