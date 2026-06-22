@@ -92,6 +92,25 @@
         default = "/home/${config.mySystem.standalone.user}";
         description = "Home directory on the non-NixOS machine.";
       };
+      gpu = lib.mkOption {
+        type = lib.types.enum [ "mesa" "nvidia" ];
+        default = "mesa";
+        description = ''
+          GPU vendor of the non-NixOS machine, selecting the nixGL wrapper used
+          to run nix GL/Vulkan apps (a non-NixOS box has no /run/opengl-driver).
+          "mesa" -> nixGLIntel/nixVulkanIntel (covers Intel + AMD).
+          "nvidia" -> nixGLNvidia/nixVulkanNvidia (proprietary driver; unfree and
+          pinned to the host driver version).
+        '';
+      };
+      flakePath = lib.mkOption {
+        type = lib.types.str;
+        default = "~/Documents/nix";
+        description = ''
+          Path to this repo on the non-NixOS machine, used by the `rebuild`
+          shell alias. Adjust if the repo is cloned elsewhere.
+        '';
+      };
     };
 
     # ── Profiles ───────────────────────────────────────────────

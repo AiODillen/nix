@@ -6,18 +6,16 @@ let
     [ settings.xkbLayout settings.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
     (builtins.readFile ../../profiles/desktop/niri/config.kdl);
 
-  # nixGL Mesa shims — non-NixOS has no /run/opengl-driver, so nix GPU apps
-  # can't find the system driver. These wrap a program with the right libs.
-  # "Intel" is a misnomer: these are the Mesa wrappers (cover AMD/Intel).
-  nixgl = inputs.nixgl.packages.${pkgs.stdenv.hostPlatform.system};
-  nixGLIntel = nixgl.nixGLIntel;
-  nixVulkanIntel = nixgl.nixVulkanIntel;
+  # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with gpu.nix.
+  # Non-NixOS has no /run/opengl-driver, so nix GPU apps can't find the system
+  # driver; these wrap a program with the right libs.
+  nixgl = import ./nixgl.nix { inherit pkgs inputs settings; };
 
   # Run niri under both shims so its GL + Vulkan renderers find the GPU.
   # niri.service (below) uses this as ExecStart; niri-session itself needs no
   # GPU, so the session entry runs the plain niri-session from the profile.
   niriWrapped = pkgs.writeShellScriptBin "niri-nixgl" ''
-    exec ${nixGLIntel}/bin/nixGLIntel ${nixVulkanIntel}/bin/nixVulkanIntel \
+    exec ${nixgl.glExe} ${nixgl.vulkanExe} \
       ${pkgs.niri}/bin/niri "$@"
   '';
 
@@ -137,18 +135,25 @@ lib.mkIf (settings.desktop == "niri") {
   # never hangs on a prompt during a non-interactive switch: with the rule
   # above it runs silently; without it, it prints the one-time setup command.
   # cmp guard means it only acts when the entry actually changed.
-  # NB: absolute /usr/bin/sudo — home-manager's activation PATH does not
-  # include /usr/bin, so a bare `sudo` is not found. Anchor after
-  # linkGeneration so the source file already holds the new content (else cmp
-  # sees no change and skips the copy).
+  # NB: home-manager's activation PATH does not include the system bin dirs, so
+  # a bare `sudo` is not found — locate it across the common locations (distros
+  # vary: /usr/bin, /run/wrappers/bin, /bin, /usr/local/bin). If no sudo exists
+  # at all (e.g. a doas-only distro), fall back to printing manual instructions.
+  # Anchor after linkGeneration so the source file already holds the new content
+  # (else cmp sees no change and skips the copy).
   home.activation.installNiriSession = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [ -f "${sessionSrc}" ] && ! cmp -s "${sessionSrc}" "${sessionDst}"; then
-      if $DRY_RUN_CMD /usr/bin/sudo -n ${installCmd} 2>/dev/null; then
+      _sudo=$(PATH=/run/wrappers/bin:/usr/bin:/usr/local/bin:/bin command -v sudo 2>/dev/null || true)
+      if [ -n "$_sudo" ] && $DRY_RUN_CMD "$_sudo" -n ${installCmd} 2>/dev/null; then
         :
-      else
+      elif [ -n "$_sudo" ]; then
         echo "niri session entry needs a one-time passwordless-sudo rule. Run once:"
         echo "  sudo install -m440 ${sudoersPath} /etc/sudoers.d/niri-session"
         echo "Then re-run 'home-manager switch' — it installs the entry silently after that."
+      else
+        echo "niri session entry not installed: no 'sudo' found on PATH."
+        echo "Install it manually as root (the greeter only scans the system dir):"
+        echo "  install -Dm644 ${sessionSrc} ${sessionDst}"
       fi
     fi
   '';

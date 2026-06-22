@@ -56,6 +56,8 @@
       hmSettings = {
         username       = cfg.standalone.user;
         homeDirectory  = cfg.standalone.homeDirectory;
+        gpu            = cfg.standalone.gpu;
+        flakePath      = cfg.standalone.flakePath;
         scheme         = cfg.theming.scheme;
         polarity       = cfg.theming.polarity;
         wallpaper      = cfg.theming.wallpaper;

@@ -60,6 +60,8 @@
     standalone = {
       enable = true;
       user = "niklas";
+      gpu = "mesa"; # "mesa" (Intel/AMD) | "nvidia" (proprietary driver) — picks the nixGL wrapper
+      flakePath = "~/Documents/nix"; # where this repo lives on the machine (used by the `rebuild` alias)
     };
 
     # ── Profiles (toggle features) ───────────────────────────────────────────

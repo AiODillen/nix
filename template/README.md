@@ -71,14 +71,17 @@ mySystem = {
   standalone = {
     enable = true;       # exposes homeConfigurations.<user>
     user   = "niklas";   # login user on the non-NixOS box (defaults to user.name)
+    gpu    = "mesa";     # "mesa" (Intel/AMD) | "nvidia" — picks the nixGL wrapper
+    flakePath = "~/Documents/nix";    # repo location; used by the `rebuild` alias
     # homeDirectory = "/home/niklas";   # optional; defaults to /home/<user>
   };
 };
 ```
 
 Change theme/locale/keyboard in the shared `mySystem` block (affects both the
-NixOS and standalone builds); change only the non-NixOS username/home in
-`standalone`. Then `rebuild`. Theme scheme names: see the table in
+NixOS and standalone builds); change only the per-machine identity
+(`user`/`homeDirectory`), `gpu` vendor, and repo `flakePath` in `standalone`.
+Then `rebuild`. Theme scheme names: see the table in
 `hosts/default/default.nix` or `ls ${pkgs.base16-schemes}/share/themes/`.
 
 ### Feature toggles
@@ -132,13 +135,22 @@ To drop a profile, remove its line from the `imports` list in
 
 - **GPU apps need nixGL.** A non-NixOS box has no `/run/opengl-driver`, so
   nix-built GL/Vulkan apps can't find the system driver ("no suitable graphics
-  adapter"). The niri profile installs the `nixGLIntel` (Mesa GL) and
-  `nixVulkanIntel` (Mesa Vulkan) wrappers — despite the name they cover AMD too.
-  Run a nix GUI app through the matching wrapper:
+  adapter"). The wrapper pair is selected by `standalone.gpu`:
+
+  - `mesa` (default) → `nixGLIntel` / `nixVulkanIntel` — Intel **and** AMD
+    (the "Intel" name is a misnomer).
+  - `nvidia` → `nixGLNvidia` / `nixVulkanNvidia` — proprietary driver. Unfree
+    (already allowed for the standalone build) and pinned to the host driver
+    version, so it is sensitive to driver mismatches.
+
+  niri itself runs through the matching wrappers automatically (its session
+  unit's `ExecStart` is the wrapped `niri-nixgl`), as does the `gram` launcher.
+  For other nix GUI apps, run them through the wrapper for your vendor:
 
   ```sh
-  nixGLIntel <app>        # OpenGL apps
-  nixVulkanIntel gram     # Vulkan apps
+  nixGLIntel <app>        # OpenGL apps  (mesa)
+  nixVulkanIntel gram     # Vulkan apps  (mesa)
+  nixGLNvidia <app>       # OpenGL apps  (nvidia)
   ```
 
 - **niri session:** the greeter (LightDM/GDM/SDDM) only scans the system dir
@@ -153,10 +165,14 @@ To drop a profile, remove its line from the `imports` list in
 
   After that, every `home-manager switch` places/updates the entry silently (no
   password, no prompt). The activation prints this exact command until the rule
-  is in place. The entry's `Exec` runs `~/.nix-profile/bin/niri-session-nixgl` —
-  niri wrapped in both nixGL shims so the compositor finds the GPU. XWayland apps
-  (e.g. Steam) work via `xwayland-satellite`. greetd/portals/flatpak are
-  NixOS-only and not ported.
+  is in place. niri's session unit is wrapped in the nixGL shims so the
+  compositor finds the GPU. XWayland apps (e.g. Steam) work via
+  `xwayland-satellite`. greetd/portals/flatpak are NixOS-only and not ported.
+
+  The activation locates `sudo` across the usual distro paths
+  (`/usr/bin`, `/run/wrappers/bin`, `/usr/local/bin`, `/bin`). On a distro with
+  no `sudo` at all (e.g. doas-only), it skips the install and prints the
+  `install -Dm644 …` command to run as root yourself.
 
 - **Steam / gamescope** are not included (system-level). Install Steam via your
   distro; the gaming profile only carries the user-space helpers.

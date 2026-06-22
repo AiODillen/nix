@@ -1,16 +1,12 @@
-{ pkgs, inputs, ... }:
+{ pkgs, inputs, settings, ... }:
 let
-  # nixGL Mesa shims — non-NixOS has no /run/opengl-driver, so nix GL/Vulkan
-  # apps can't find the system driver. "Intel" is a misnomer: these are the
-  # Mesa wrappers and cover AMD/Intel.
-  nixgl = inputs.nixgl.packages.${pkgs.stdenv.hostPlatform.system};
-  nixGLIntel = nixgl.nixGLIntel;
-  nixVulkanIntel = nixgl.nixVulkanIntel;
+  # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with niri.nix.
+  nixgl = import ./nixgl.nix { inherit pkgs inputs settings; };
 in
 {
   home.packages = [
-    nixGLIntel       # run nix OpenGL apps as `nixGLIntel <app>`
-    nixVulkanIntel   # run nix Vulkan apps as `nixVulkanIntel <app>`
+    nixgl.gl         # run nix OpenGL apps as `${nixgl.glName} <app>`
+    nixgl.vulkan     # run nix Vulkan apps as `${nixgl.vulkanName} <app>`
   ];
 
   # gram is a Zed-based editor (GPUI → Vulkan). Its own .desktop runs `gram`
@@ -20,7 +16,7 @@ in
     name = "Gram";
     genericName = "Text Editor";
     comment = "A code editor for humanoid apes and grumpy toads";
-    exec = "${nixVulkanIntel}/bin/nixVulkanIntel gram %U";
+    exec = "${nixgl.vulkanExe} gram %U";
     icon = "app.liten.Gram";
     terminal = false;
     startupNotify = true;
@@ -30,5 +26,5 @@ in
   };
 
   # Terminal convenience: `gram` from a shell also goes through the shim.
-  programs.fish.shellAliases.gram = "${nixVulkanIntel}/bin/nixVulkanIntel gram";
+  programs.fish.shellAliases.gram = "${nixgl.vulkanExe} gram";
 }
