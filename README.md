@@ -48,6 +48,39 @@ nix flake update   # bump pinned inputs (nixpkgs, home-manager, stylix)
 
 ---
 
+## Non-NixOS machine (standalone home-manager)
+
+This flake also exposes a standalone home-manager config under `portable/` for a
+box that has only the Nix package manager (no NixOS). It ports packages, stylix
+theming, fish, AI tooling, gaming home apps, and the niri/gnome desktop config.
+System-level pieces (boot, kernel, networking, pipewire, Steam/gamescope,
+greetd/portals/flatpak, system locale generation) are NOT included — the distro
+provides those.
+
+Prerequisite: home-manager available standalone, e.g.
+
+```sh
+nix run home-manager/release-26.05 -- switch --flake ~/Documents/nix#niklas
+```
+
+or, once installed:
+
+```sh
+home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
+```
+
+Edit the `hmSettings` block in `flake.nix` to change username, theme, locale, or
+keyboard layout. Notes:
+
+- The glibc locale named in `localeMain`/`localeRegional` must already exist on
+  the distro (`locale -a`) — home-manager only exports the env vars.
+- The AI profile writes `~/.claude/{CLAUDE.md,RTK.md,settings.json}` only if they
+  do not already exist; an existing Claude setup is left untouched.
+- niri appears in your display manager's session list; XWayland apps work via
+  `xwayland-satellite`.
+
+---
+
 ## Repo layout
 
 ```
