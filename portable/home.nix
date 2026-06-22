@@ -7,6 +7,7 @@
     ./profiles/theming.nix
     ./profiles/ai.nix
     ./profiles/gaming.nix
+    ./profiles/gpu.nix
     ./profiles/niri.nix
     ./profiles/gnome.nix
   ];

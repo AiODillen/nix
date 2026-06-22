@@ -34,8 +34,6 @@ lib.mkIf (settings.desktop == "niri") {
   home.packages = with pkgs; [
     niri
     niriSessionWrapped   # nixGL-wrapped niri-session (used by the session entry)
-    nixGLIntel           # run other nix GPU apps as `nixGLIntel <app>`
-    nixVulkanIntel       # ...or `nixVulkanIntel <app>` for Vulkan apps (e.g. gram)
     xwayland-satellite   # on-demand XWayland; niri exports $DISPLAY when present
     nautilus
     gnome-disk-utility
@@ -107,9 +105,11 @@ lib.mkIf (settings.desktop == "niri") {
   # never hangs on a prompt during a non-interactive switch: with the rule
   # above it runs silently; without it, it prints the one-time setup command.
   # cmp guard means it only acts when the entry actually changed.
+  # NB: absolute /usr/bin/sudo — home-manager's activation PATH does not
+  # include /usr/bin, so a bare `sudo` is not found.
   home.activation.installNiriSession = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ -f "${sessionSrc}" ] && ! cmp -s "${sessionSrc}" "${sessionDst}"; then
-      if $DRY_RUN_CMD sudo -n ${installCmd} 2>/dev/null; then
+      if $DRY_RUN_CMD /usr/bin/sudo -n ${installCmd} 2>/dev/null; then
         :
       else
         echo "niri session entry needs a one-time passwordless-sudo rule. Run once:"
