@@ -40,9 +40,37 @@
         ];
       };
       cfg = system.config.mySystem;
+
+      # ── Standalone home-manager (non-NixOS) ──────────────────────
+      hmSettings = {
+        username       = "niklas";
+        homeDirectory  = "/home/niklas";
+        scheme         = "catppuccin-mocha";
+        polarity       = "dark";
+        wallpaper      = ./wallpaper.png;
+        localeMain     = "en_US.UTF-8";
+        localeRegional = "de_DE.UTF-8";
+        xkbLayout      = "de";
+        xkbVariant     = "nodeadkeys";
+      };
+      hmPkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+        overlays = [ inputs.nur.overlays.default ];
+      };
     in
     {
       nixosConfigurations.${cfg.hostname} = system;
+
+      homeConfigurations.${hmSettings.username} =
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = hmPkgs;
+          extraSpecialArgs = { inherit inputs; settings = hmSettings; };
+          modules = [
+            inputs.stylix.homeModules.stylix
+            ./portable/home.nix
+          ];
+        };
 
       checks.x86_64-linux = nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
         niri-config =
