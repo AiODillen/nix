@@ -11,6 +11,7 @@ in
     ../profiles/gaming/home.nix
     ../profiles/ai/home.nix
     ../profiles/shell/home.nix
+    ../machines/pc/monitors.nix
   ];
 
   home.username = u;

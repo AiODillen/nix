@@ -18,10 +18,12 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
   external connected, only the laptop panel is shown.
 
   niri implements `wlr-output-management`, so [kanshi](https://sr.ht/~emersion/kanshi/)
-  drives niri's outputs at runtime. **`monitors.nix` hardcodes nothing** — it
-  maps the profile list from the one config file
-  (`mySystem.standalone.monitors` in `hosts/default/default.nix`) straight onto
-  kanshi profiles.
+  drives niri's outputs at runtime. Monitor config is **device-specific**, so it
+  lives in this per-device file — *not* in the shared `mySystem` options. The
+  schema and kanshi build come from the shared module
+  `modules/home/monitors.nix`; this file only supplies this machine's `profiles`
+  and enables them when the desktop is niri (kanshi can't drive GNOME). The main
+  PC has its own equivalent at `machines/pc/monitors.nix`.
 
   kanshi applies the **first** profile whose listed outputs are all connected,
   so order matters: list multi-monitor docks before the bare-laptop fallback.
@@ -29,12 +31,12 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
   profile (otherwise the compositor keeps it on). This generalizes to any number
   of monitors — add a profile per dock/topology you care about. Per-output keys:
   `connector`, `status` (`enable`/`disable`), `scale`, `position` (`"x,y"`),
-  `mode` (`"3440x1440@60Hz"`), `transform`. Connector names: `niri msg outputs`.
+  `mode` (`"3440x1440@100Hz"` — refresh rate is the `@<rate>Hz` part),
+  `transform`, `adaptiveSync` (VRR). Connector names: `niri msg outputs`.
 
-  This laptop's default profiles: `docked` (panel `eDP-1` off, external
-  `HDMI-A-1` on at scale 1.0) and `mobile` (panel `eDP-1` on at scale 1.25).
-  Change monitors by editing the `monitors` block in the one config file, not
-  this overlay.
+  This laptop's profiles: `docked` (panel `eDP-1` off, external `HDMI-A-1` on at
+  scale 1.0) and `mobile` (panel `eDP-1` on at scale 1.25). Edit them right here
+  in `monitors.nix`.
 
   kanshi runs as a user service bound to `graphical-session.target`, which the
   template's niri service drives, so it starts inside the niri session. Check it
@@ -57,8 +59,11 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 ## Adding another machine
 
 1. Copy `machines/laptop/` to `machines/<name>/`.
-2. Set that machine's outputs in `mySystem.standalone.monitors` (the one config
-   file) — `monitors.nix` reads them, so leave it as-is (or drop it + the
-   `monitors.enable` toggle if the machine needs no output switching).
+2. Edit that machine's `monitors.nix` for its outputs (it imports the shared
+   `modules/home/monitors.nix`), or drop the file if it needs no output
+   switching. Monitor data is per-device and stays in this file.
 3. Expose it: either repoint the `niklas` output in the root `flake.nix` to the
    new `home.nix`, or add a second `homeConfigurations.<name>` entry.
+
+A NixOS machine instead reuses the same shared module from its home-manager
+config — see `machines/pc/monitors.nix`, imported by `users/home.nix`.

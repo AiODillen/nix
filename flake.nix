@@ -58,7 +58,6 @@
         homeDirectory  = cfg.standalone.homeDirectory;
         gpu            = cfg.standalone.gpu;
         flakePath      = cfg.standalone.flakePath;
-        monitors       = cfg.standalone.monitors;
         scheme         = cfg.theming.scheme;
         polarity       = cfg.theming.polarity;
         wallpaper      = cfg.theming.wallpaper;
