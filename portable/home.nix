@@ -8,6 +8,7 @@
     ./profiles/ai.nix
     ./profiles/gaming.nix
     ./profiles/niri.nix
+    ./profiles/gnome.nix
   ];
 
   home.username = settings.username;
