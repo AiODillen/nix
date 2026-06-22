@@ -79,7 +79,7 @@
           extraSpecialArgs = { inherit inputs; settings = hmSettings; };
           modules = [
             inputs.stylix.homeModules.stylix
-            ./portable/home.nix
+            ./machines/laptop/home.nix
           ];
         };
       };

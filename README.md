@@ -50,12 +50,14 @@ nix flake update   # bump pinned inputs (nixpkgs, home-manager, stylix)
 
 ## Non-NixOS machine (standalone home-manager)
 
-This flake also exposes a standalone home-manager config under `portable/` for a
-box that has only the Nix package manager (no NixOS). It ports packages, stylix
-theming, fish, AI tooling, gaming home apps, and the niri/gnome desktop config.
-System-level pieces (boot, kernel, networking, pipewire, Steam/gamescope,
-greetd/portals/flatpak, system locale generation) are NOT included — the distro
-provides those.
+This flake also exposes a standalone home-manager config for a box that has only
+the Nix package manager (no NixOS). The reusable base lives in `template/`; each
+machine is a thin overlay under `machines/<name>/` that imports the template and
+adds only machine-specific bits. The `niklas` output builds `machines/laptop/`.
+It ports packages, stylix theming, fish, AI tooling, gaming home apps, and the
+niri/gnome desktop config. System-level pieces (boot, kernel, networking,
+pipewire, Steam/gamescope, greetd/portals/flatpak, system locale generation) are
+NOT included — the distro provides those.
 
 Prerequisite: home-manager available standalone, e.g.
 
@@ -72,7 +74,8 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 Settings come from the same `hosts/default/default.nix` (`mySystem`) the NixOS
 build uses — theming, locale, and feature toggles are inherited. Only the
 non-NixOS identity lives in `mySystem.standalone` (`enable`, `user`,
-`homeDirectory`). See `portable/README.md` for details. Notes:
+`homeDirectory`). See `template/README.md` and `machines/laptop/README.md` for
+details. Notes:
 
 - The glibc locale named in `localeMain`/`localeRegional` must already exist on
   the distro (`locale -a`) — home-manager only exports the env vars.
@@ -101,6 +104,10 @@ profiles/                 # toggleable feature bundles
   storage/                # automount user-home filesystems
 users/                    # user account + home-manager glue
   nixos.nix  home.nix     # both parameterized by mySystem.user.name
+template/                 # standalone home-manager base (non-NixOS)
+  home.nix  profiles/     # imported by each machine overlay
+machines/                 # per-machine standalone overlays
+  laptop/                 # imports template + kanshi monitor switching
 wallpaper.png             # default stylix wallpaper
 ```
 
