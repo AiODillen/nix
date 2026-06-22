@@ -13,11 +13,12 @@ let
   nixGLIntel = nixgl.nixGLIntel;
   nixVulkanIntel = nixgl.nixVulkanIntel;
 
-  # Launch niri under both shims so its GL + Vulkan renderers find the GPU.
-  # Stable profile path is referenced by the system session entry below.
-  niriSessionWrapped = pkgs.writeShellScriptBin "niri-session-nixgl" ''
+  # Run niri under both shims so its GL + Vulkan renderers find the GPU.
+  # niri.service (below) uses this as ExecStart; niri-session itself needs no
+  # GPU, so the session entry runs the plain niri-session from the profile.
+  niriWrapped = pkgs.writeShellScriptBin "niri-nixgl" ''
     exec ${nixGLIntel}/bin/nixGLIntel ${nixVulkanIntel}/bin/nixVulkanIntel \
-      ${pkgs.niri}/bin/niri-session "$@"
+      ${pkgs.niri}/bin/niri "$@"
   '';
 
   # The session entry must land in a root-owned dir the greeter scans.
@@ -33,7 +34,7 @@ in
 lib.mkIf (settings.desktop == "niri") {
   home.packages = with pkgs; [
     niri
-    niriSessionWrapped   # nixGL-wrapped niri-session (used by the session entry)
+    niriWrapped          # `niri-nixgl` — nixGL-wrapped niri (ExecStart of niri.service)
     xwayland-satellite   # on-demand XWayland; niri exports $DISPLAY when present
     nautilus
     gnome-disk-utility
@@ -41,6 +42,37 @@ lib.mkIf (settings.desktop == "niri") {
   ];
 
   xdg.configFile."niri/config.kdl".text = renderedKdl;
+
+  # niri ships systemd user units (niri.service, niri-shutdown.target), but the
+  # NixOS module exposes them via `systemd.packages`, which standalone HM has no
+  # equivalent for — so niri-session fails with "unit not found". Recreate them
+  # as HM user units (HM handles daemon-reload). niri.service's ExecStart is the
+  # nixGL-wrapped niri so the compositor finds the GPU. Unit metadata mirrors the
+  # upstream units (graphical-session wiring).
+  systemd.user.services.niri = {
+    Unit = {
+      Description = "A scrollable-tiling Wayland compositor";
+      BindsTo = [ "graphical-session.target" ];
+      Before = [ "graphical-session.target" "xdg-desktop-autostart.target" ];
+      Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+      After = [ "graphical-session-pre.target" ];
+    };
+    Service = {
+      Slice = "session.slice";
+      Type = "notify";
+      ExecStart = "${niriWrapped}/bin/niri-nixgl --session";
+    };
+  };
+
+  systemd.user.targets.niri-shutdown = {
+    Unit = {
+      Description = "Shutdown running niri session";
+      DefaultDependencies = false;
+      StopWhenUnneeded = true;
+      Conflicts = [ "graphical-session.target" "graphical-session-pre.target" ];
+      After = [ "graphical-session.target" "graphical-session-pre.target" ];
+    };
+  };
 
   # Wayland daemons (stylix themes these via its default targets).
   programs.foot.enable = true;
@@ -81,13 +113,13 @@ lib.mkIf (settings.desktop == "niri") {
   #
   #   sudo cp ~/.local/share/wayland-sessions/niri.desktop /usr/share/wayland-sessions/
   #
-  # Exec uses the stable ~/.nix-profile path (valid across rebuilds), and runs
-  # the nixGL-wrapped launcher so the compositor finds the GPU driver.
+  # Exec runs the plain niri-session (stable ~/.nix-profile path); it starts the
+  # nixGL-wrapped niri.service defined above, which is where the GPU is needed.
   xdg.dataFile."wayland-sessions/niri.desktop".text = ''
     [Desktop Entry]
     Name=Niri (nix)
     Comment=A scrollable-tiling Wayland compositor
-    Exec=${settings.homeDirectory}/.nix-profile/bin/niri-session-nixgl
+    Exec=${settings.homeDirectory}/.nix-profile/bin/niri-session
     Type=Application
   '';
 
@@ -106,8 +138,10 @@ lib.mkIf (settings.desktop == "niri") {
   # above it runs silently; without it, it prints the one-time setup command.
   # cmp guard means it only acts when the entry actually changed.
   # NB: absolute /usr/bin/sudo — home-manager's activation PATH does not
-  # include /usr/bin, so a bare `sudo` is not found.
-  home.activation.installNiriSession = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # include /usr/bin, so a bare `sudo` is not found. Anchor after
+  # linkGeneration so the source file already holds the new content (else cmp
+  # sees no change and skips the copy).
+  home.activation.installNiriSession = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     if [ -f "${sessionSrc}" ] && ! cmp -s "${sessionSrc}" "${sessionDst}"; then
       if $DRY_RUN_CMD /usr/bin/sudo -n ${installCmd} 2>/dev/null; then
         :
