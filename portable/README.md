@@ -137,16 +137,20 @@ To drop a profile, remove its line from the `imports` list in
   ```
 
 - **niri session:** the greeter (LightDM/GDM/SDDM) only scans the system dir
-  `/usr/share/wayland-sessions`, which home-manager can't write. The profile
-  generates the entry in your home; copy it there once with root:
+  `/usr/share/wayland-sessions`, which home-manager can't write directly. An
+  activation step copies the entry there with `sudo` during
+  `home-manager switch` — so the switch **prompts for your password** the first
+  time (and whenever the entry changes). If root isn't available it prints the
+  manual command instead:
 
   ```sh
   sudo cp ~/.local/share/wayland-sessions/niri.desktop /usr/share/wayland-sessions/
   ```
 
-  Its `Exec` runs `~/.nix-profile/bin/niri-session-nixgl` — niri wrapped in both
-  nixGL shims so the compositor finds the GPU. XWayland apps (e.g. Steam) work
-  via `xwayland-satellite`. greetd/portals/flatpak are NixOS-only and not ported.
+  The entry's `Exec` runs `~/.nix-profile/bin/niri-session-nixgl` — niri wrapped
+  in both nixGL shims so the compositor finds the GPU. XWayland apps (e.g. Steam)
+  work via `xwayland-satellite`. greetd/portals/flatpak are NixOS-only and not
+  ported.
 
 - **Steam / gamescope** are not included (system-level). Install Steam via your
   distro; the gaming profile only carries the user-space helpers.

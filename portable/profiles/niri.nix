@@ -82,4 +82,17 @@ lib.mkIf (settings.desktop == "niri") {
     Exec=${settings.homeDirectory}/.nix-profile/bin/niri-session-nixgl
     Type=Application
   '';
+
+  # Copy the session entry into the system dir the greeter scans. Needs root,
+  # so this runs `sudo` during `home-manager switch` — only when the file
+  # actually changed (cmp guard), and never fails the switch if root is
+  # unavailable (it just prints the manual command instead).
+  home.activation.installNiriSession = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    _src="${settings.homeDirectory}/.local/share/wayland-sessions/niri.desktop"
+    _dst="/usr/share/wayland-sessions/niri.desktop"
+    if [ -f "$_src" ] && ! cmp -s "$_src" "$_dst"; then
+      $DRY_RUN_CMD sudo install -Dm644 "$_src" "$_dst" \
+        || echo "warning: could not install $_dst as root — run: sudo cp $_src $_dst"
+    fi
+  '';
 }
