@@ -111,6 +111,71 @@
           shell alias. Adjust if the repo is cloned elsewhere.
         '';
       };
+      monitors = {
+        # Output switching via kanshi (niri only), configured as a direct list
+        # of kanshi profiles. Consumed by the machine overlay
+        # (machines/<name>/monitors.nix). kanshi applies the FIRST profile whose
+        # listed outputs are ALL connected, so order profiles most-specific
+        # first (e.g. a multi-monitor dock before a bare-laptop fallback). To
+        # show only externals, list the internal panel with status = "disable"
+        # in that profile (otherwise the compositor keeps it on).
+        enable = lib.mkEnableOption "kanshi output switching (niri)";
+        profiles = lib.mkOption {
+          default = [ ];
+          description = "Ordered list of kanshi profiles. Connector names from `niri msg outputs`.";
+          type = lib.types.listOf (
+            lib.types.submodule {
+              options = {
+                name = lib.mkOption {
+                  type = lib.types.str;
+                  description = "Profile name.";
+                };
+                outputs = lib.mkOption {
+                  description = "Outputs this profile applies to (all must be connected for it to match).";
+                  type = lib.types.listOf (
+                    lib.types.submodule {
+                      options = {
+                        connector = lib.mkOption {
+                          type = lib.types.str;
+                          description = "Connector name or output description (kanshi criteria).";
+                        };
+                        status = lib.mkOption {
+                          type = lib.types.nullOr (lib.types.enum [ "enable" "disable" ]);
+                          default = null;
+                          description = "Enable or disable this output (null = kanshi default, enabled).";
+                        };
+                        scale = lib.mkOption {
+                          type = lib.types.nullOr lib.types.float;
+                          default = null;
+                          description = "Scale factor.";
+                        };
+                        position = lib.mkOption {
+                          type = lib.types.nullOr lib.types.str;
+                          default = null;
+                          example = "0,0";
+                          description = "Position \"x,y\" in the global layout.";
+                        };
+                        mode = lib.mkOption {
+                          type = lib.types.nullOr lib.types.str;
+                          default = null;
+                          example = "3440x1440@60Hz";
+                          description = "Mode \"<w>x<h>[@<rate>[Hz]]\" (default: preferred).";
+                        };
+                        transform = lib.mkOption {
+                          type = lib.types.nullOr lib.types.str;
+                          default = null;
+                          example = "90";
+                          description = "Output transform (e.g. \"90\", \"flipped-180\").";
+                        };
+                      };
+                    }
+                  );
+                };
+              };
+            }
+          );
+        };
+      };
     };
 
     # ── Profiles ───────────────────────────────────────────────

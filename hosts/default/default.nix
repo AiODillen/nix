@@ -62,6 +62,41 @@
       user = "niklas";
       gpu = "mesa"; # "mesa" (Intel/AMD) | "nvidia" (proprietary driver) — picks the nixGL wrapper
       flakePath = "~/Documents/nix"; # where this repo lives on the machine (used by the `rebuild` alias)
+      # Output switching (kanshi, niri only). Ordered list of profiles; kanshi
+      # applies the first whose outputs are ALL connected, so list multi-monitor
+      # docks before the bare-laptop fallback. Disable the panel to show only
+      # externals. Connector names from `niri msg outputs`.
+      monitors = {
+        enable = true;
+        profiles = [
+          {
+            name = "docked";
+            outputs = [
+              {
+                connector = "eDP-1";
+                status = "disable";
+              }
+              {
+                connector = "HDMI-A-1";
+                status = "enable";
+                position = "0,0";
+                scale = 1.0;
+              }
+            ];
+          }
+          {
+            name = "mobile";
+            outputs = [
+              {
+                connector = "eDP-1";
+                status = "enable";
+                position = "0,0";
+                scale = 1.25;
+              }
+            ];
+          }
+        ];
+      };
     };
 
     # ── Profiles (toggle features) ───────────────────────────────────────────

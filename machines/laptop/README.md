@@ -18,14 +18,23 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
   external connected, only the laptop panel is shown.
 
   niri implements `wlr-output-management`, so [kanshi](https://sr.ht/~emersion/kanshi/)
-  drives niri's outputs at runtime. kanshi applies the first profile whose
-  listed outputs are all connected, so the two-output `docked` profile is listed
-  before the panel-only `mobile` profile.
+  drives niri's outputs at runtime. **`monitors.nix` hardcodes nothing** — it
+  maps the profile list from the one config file
+  (`mySystem.standalone.monitors` in `hosts/default/default.nix`) straight onto
+  kanshi profiles.
 
-  | Output    | Role        | Mode      | Scale |
-  |-----------|-------------|-----------|-------|
-  | `eDP-1`   | laptop panel | 1920x1200 | 1.25  |
-  | `HDMI-A-1`| external 34" | 3440x1440 | 1.0   |
+  kanshi applies the **first** profile whose listed outputs are all connected,
+  so order matters: list multi-monitor docks before the bare-laptop fallback.
+  To show only externals, list the panel with `status = "disable"` in that
+  profile (otherwise the compositor keeps it on). This generalizes to any number
+  of monitors — add a profile per dock/topology you care about. Per-output keys:
+  `connector`, `status` (`enable`/`disable`), `scale`, `position` (`"x,y"`),
+  `mode` (`"3440x1440@60Hz"`), `transform`. Connector names: `niri msg outputs`.
+
+  This laptop's default profiles: `docked` (panel `eDP-1` off, external
+  `HDMI-A-1` on at scale 1.0) and `mobile` (panel `eDP-1` on at scale 1.25).
+  Change monitors by editing the `monitors` block in the one config file, not
+  this overlay.
 
   kanshi runs as a user service bound to `graphical-session.target`, which the
   template's niri service drives, so it starts inside the niri session. Check it
@@ -33,14 +42,15 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 
   Known limitation: on hotplug niri briefly applies its own output defaults
   before kanshi corrects them, so a momentary flicker is possible
-  ([niri #676](https://github.com/niri-wm/niri/issues/676)).
-
-  To target a different external connector, edit the `HDMI-A-1` criteria in
-  `monitors.nix` (run `niri msg outputs` to list connector names).
+  ([niri #676](https://github.com/niri-wm/niri/issues/676)). Also, if only some
+  of a profile's outputs are connected that profile won't match — add an
+  explicit profile for each partial-dock case you use.
 
 ## Adding another machine
 
 1. Copy `machines/laptop/` to `machines/<name>/`.
-2. Adjust `monitors.nix` (or drop it) for that machine's outputs.
+2. Set that machine's outputs in `mySystem.standalone.monitors` (the one config
+   file) — `monitors.nix` reads them, so leave it as-is (or drop it + the
+   `monitors.enable` toggle if the machine needs no output switching).
 3. Expose it: either repoint the `niklas` output in the root `flake.nix` to the
    new `home.nix`, or add a second `homeConfigurations.<name>` entry.

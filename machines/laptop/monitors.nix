@@ -1,51 +1,37 @@
-# Dynamic output switching for the laptop, via kanshi.
+# Output switching, via kanshi. All knobs come from the one config file
+# (mySystem.standalone.monitors in hosts/default/default.nix), threaded here as
+# settings.monitors — nothing machine-specific is hardcoded in this overlay.
 #
-# Goal: when an external monitor is connected, show only the external; with no
-# external connected, show only the laptop panel.
+# This maps the configured profile list straight onto kanshi profiles. kanshi
+# applies the FIRST profile whose listed outputs are all connected, so the order
+# from the config file is preserved (list multi-monitor docks before the bare
+# laptop fallback). To show only externals, the panel must be listed with
+# status = "disable" in that profile, else the compositor keeps it on.
 #
-# niri implements wlr-output-management (since v0.1.8), so kanshi can drive its
-# outputs at runtime. kanshi applies the FIRST profile whose listed outputs are
-# all connected, so `docked` (needs both) must come before `mobile` (needs only
-# the panel) — otherwise `mobile` would also match while docked.
-#
-# Outputs on this machine:
-#   eDP-1     laptop panel    (1920x1200, scale 1.25)
-#   HDMI-A-1  external 34"     (3440x1440, scale 1.0)
-#
-# Scales mirror the current live setup. kanshi binds to graphical-session.target
-# (config.wayland.systemd.target), which the template's niri.service drives, so
-# the kanshi user service starts inside the niri session.
-{ ... }:
-{
+# kanshi binds to graphical-session.target (config.wayland.systemd.target),
+# which the template's niri.service drives, so the kanshi user service starts
+# inside the niri session.
+{ lib, settings, ... }:
+let
+  m = settings.monitors;
+
+  # Emit only the keys the user set; kanshi/HM default the rest. criteria is the
+  # one required field.
+  mkOutput =
+    o:
+    { criteria = o.connector; }
+    // lib.optionalAttrs (o.status != null) { inherit (o) status; }
+    // lib.optionalAttrs (o.scale != null) { inherit (o) scale; }
+    // lib.optionalAttrs (o.position != null) { inherit (o) position; }
+    // lib.optionalAttrs (o.mode != null) { inherit (o) mode; }
+    // lib.optionalAttrs (o.transform != null) { inherit (o) transform; };
+in
+lib.mkIf m.enable {
   services.kanshi = {
     enable = true;
-    settings = [
-      {
-        profile.name = "docked";
-        profile.outputs = [
-          {
-            criteria = "eDP-1";
-            status = "disable";
-          }
-          {
-            criteria = "HDMI-A-1";
-            status = "enable";
-            position = "0,0";
-            scale = 1.0;
-          }
-        ];
-      }
-      {
-        profile.name = "mobile";
-        profile.outputs = [
-          {
-            criteria = "eDP-1";
-            status = "enable";
-            position = "0,0";
-            scale = 1.25;
-          }
-        ];
-      }
-    ];
+    settings = map (p: {
+      profile.name = p.name;
+      profile.outputs = map mkOutput p.outputs;
+    }) m.profiles;
   };
 }
