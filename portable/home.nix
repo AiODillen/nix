@@ -4,6 +4,7 @@
     ./profiles/core.nix
     ./profiles/shell.nix
     ./profiles/locale.nix
+    ./profiles/theming.nix
   ];
 
   home.username = settings.username;
