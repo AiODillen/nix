@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.mySystem = {
     # ── Identity ────────────────────────────────────────────────
@@ -72,6 +72,26 @@
       type = lib.types.enum [ "niri" "gnome" ];
       default = "niri";
       description = "Which desktop environment to enable.";
+    };
+
+    # ── Standalone (non-NixOS) ─────────────────────────────────
+    # Marks this checkout as also targeting a non-NixOS machine via a
+    # standalone home-manager output. Identity lives here; everything else
+    # (theming, locale, profile toggles, desktop) is inherited from the shared
+    # mySystem block, so default.nix drives every config. Built with
+    # `home-manager switch --flake .#<standalone.user>`.
+    standalone = {
+      enable = lib.mkEnableOption "standalone home-manager output for a non-NixOS machine";
+      user = lib.mkOption {
+        type = lib.types.str;
+        default = config.mySystem.user.name;
+        description = "Login user on the non-NixOS machine. Defaults to the NixOS user.name.";
+      };
+      homeDirectory = lib.mkOption {
+        type = lib.types.str;
+        default = "/home/${config.mySystem.standalone.user}";
+        description = "Home directory on the non-NixOS machine.";
+      };
     };
 
     # ── Profiles ───────────────────────────────────────────────

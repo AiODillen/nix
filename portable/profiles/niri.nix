@@ -6,7 +6,7 @@ let
     [ settings.xkbLayout settings.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
     (builtins.readFile ../../profiles/desktop/niri/config.kdl);
 in
-{
+lib.mkIf (settings.desktop == "niri") {
   home.packages = with pkgs; [
     niri
     xwayland-satellite   # on-demand XWayland; niri exports $DISPLAY when present

@@ -42,28 +42,36 @@
       cfg = system.config.mySystem;
 
       # ── Standalone home-manager (non-NixOS) ──────────────────────
-      hmSettings = {
-        username       = "niklas";
-        homeDirectory  = "/home/niklas";
-        scheme         = "catppuccin-mocha";
-        polarity       = "dark";
-        wallpaper      = ./wallpaper.png;
-        localeMain     = "en_US.UTF-8";
-        localeRegional = "de_DE.UTF-8";
-        xkbLayout      = "de";
-        xkbVariant     = "nodeadkeys";
-      };
+      # Identity comes from mySystem.standalone; everything else is inherited
+      # from the shared mySystem block above, so default.nix drives every
+      # config. Built with `home-manager switch --flake .#<standalone.user>`.
       hmPkgs = import nixpkgs {
         system = "x86_64-linux";
         config.allowUnfree = true;
         overlays = [ inputs.nur.overlays.default ];
       };
+      hmSettings = {
+        username       = cfg.standalone.user;
+        homeDirectory  = cfg.standalone.homeDirectory;
+        scheme         = cfg.theming.scheme;
+        polarity       = cfg.theming.polarity;
+        wallpaper      = cfg.theming.wallpaper;
+        localeMain     = cfg.locale.main;
+        localeRegional = cfg.locale.regional;
+        xkbLayout      = cfg.locale.xkbLayout;
+        xkbVariant     = cfg.locale.xkbVariant;
+        # feature toggles — mirror the NixOS profile enables
+        theming        = cfg.theming.enable;
+        ai             = cfg.ai.enable;
+        gaming         = cfg.gaming.enable;
+        desktop        = cfg.desktop;
+      };
     in
     {
       nixosConfigurations.${cfg.hostname} = system;
 
-      homeConfigurations.${hmSettings.username} =
-        home-manager.lib.homeManagerConfiguration {
+      homeConfigurations = nixpkgs.lib.optionalAttrs cfg.standalone.enable {
+        ${hmSettings.username} = home-manager.lib.homeManagerConfiguration {
           pkgs = hmPkgs;
           extraSpecialArgs = { inherit inputs; settings = hmSettings; };
           modules = [
@@ -71,6 +79,7 @@
             ./portable/home.nix
           ];
         };
+      };
 
       checks.x86_64-linux = nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
         niri-config =

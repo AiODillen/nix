@@ -69,8 +69,10 @@ or, once installed:
 home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 ```
 
-Edit the `hmSettings` block in `flake.nix` to change username, theme, locale, or
-keyboard layout. Notes:
+Settings come from the same `hosts/default/default.nix` (`mySystem`) the NixOS
+build uses — theming, locale, and feature toggles are inherited. Only the
+non-NixOS identity lives in `mySystem.standalone` (`enable`, `user`,
+`homeDirectory`). See `portable/README.md` for details. Notes:
 
 - The glibc locale named in `localeMain`/`localeRegional` must already exist on
   the distro (`locale -a`) — home-manager only exports the env vars.

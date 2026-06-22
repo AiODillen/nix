@@ -52,25 +52,43 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 
 ## Configuring it
 
-All knobs live in the **`hmSettings` block** in the repo-root `flake.nix`
-(not in `portable/`):
+There is **one settings file for every config** — `hosts/default/default.nix`
+(the `mySystem` block), the same file the NixOS build uses. The portable build
+inherits theming, locale, and the feature toggles from it.
+
+Only **identity** differs per machine, and that lives in the `standalone`
+sub-block:
 
 ```nix
-hmSettings = {
-  username       = "niklas";
-  homeDirectory  = "/home/niklas";
-  scheme         = "catppuccin-mocha";   # any pkgs.base16-schemes name
-  polarity       = "dark";               # "dark" | "light" | "either"
-  wallpaper      = ./wallpaper.png;
-  localeMain     = "en_US.UTF-8";        # LANG
-  localeRegional = "de_DE.UTF-8";        # LC_TIME, LC_MEASUREMENT, ...
-  xkbLayout      = "de";                 # keyboard layout (wayland + X11)
-  xkbVariant     = "nodeadkeys";
+mySystem = {
+  # ... shared: theming.scheme, theming.polarity, locale.*, desktop, etc.
+
+  standalone = {
+    enable = true;       # exposes homeConfigurations.<user>
+    user   = "niklas";   # login user on the non-NixOS box (defaults to user.name)
+    # homeDirectory = "/home/niklas";   # optional; defaults to /home/<user>
+  };
 };
 ```
 
-Edit, then `rebuild`. Theme scheme names: see the table in the repo-root
-`README.md` or `ls ${pkgs.base16-schemes}/share/themes/`.
+Change theme/locale/keyboard in the shared `mySystem` block (affects both the
+NixOS and portable builds); change only the non-NixOS username/home in
+`standalone`. Then `rebuild`. Theme scheme names: see the table in
+`hosts/default/default.nix` or `ls ${pkgs.base16-schemes}/share/themes/`.
+
+### Feature toggles
+
+The portable profiles honor the same toggles as NixOS:
+
+| Profile | Enabled when |
+|---|---|
+| theming | `mySystem.theming.enable` |
+| ai | `mySystem.ai.enable` |
+| gaming | `mySystem.gaming.enable` |
+| niri | `mySystem.desktop == "niri"` |
+| gnome | `mySystem.desktop == "gnome"` |
+
+core, shell, and locale are always on.
 
 ---
 

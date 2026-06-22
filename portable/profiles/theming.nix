@@ -1,5 +1,5 @@
-{ pkgs, settings, ... }:
-{
+{ lib, pkgs, settings, ... }:
+lib.mkIf settings.theming {
   stylix = {
     enable = true;
     polarity = settings.polarity;

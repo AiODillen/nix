@@ -53,6 +53,15 @@
     # ── Desktop ──────────────────────────────────────────────────────────────
     desktop = "niri"; # "niri" | "gnome"
 
+    # ── Standalone (non-NixOS machine) ───────────────────────────────────────
+    # Exposes `homeConfigurations.<user>` built from this same file. Only
+    # identity differs per machine; theming/locale/toggles are inherited above.
+    # Apply: home-manager switch --flake .#<user>
+    standalone = {
+      enable = true;
+      user = "niklas";
+    };
+
     # ── Profiles (toggle features) ───────────────────────────────────────────
     ai.enable = true; # Claude Code, rtk, codegraph, nix-ld
 
