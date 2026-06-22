@@ -1,11 +1,13 @@
 { config, pkgs, ... }:
 let
   cfg = config.mySystem;
-  kernelPackages = {
-    default = pkgs.linuxPackages;
-    latest = pkgs.linuxPackages_latest;
-    zen = pkgs.linuxPackages_zen;
-  }.${cfg.kernel};
+  kernelPackages =
+    {
+      default = pkgs.linuxPackages;
+      latest = pkgs.linuxPackages_latest;
+      zen = pkgs.linuxPackages_zen;
+    }
+    .${cfg.kernel};
 in
 {
   boot.loader.systemd-boot.enable = true;
@@ -60,8 +62,10 @@ in
     micro
     gram
     nil
-    playerctl       # MPRIS control for multimedia keys (Play/Pause/Next/Prev)
-    brightnessctl   # screen brightness keys
+    playerctl # MPRIS control for multimedia keys (Play/Pause/Next/Prev)
+    brightnessctl # screen brightness keys
+    btop
+    gearlever
   ];
 
   system.stateVersion = "26.05";

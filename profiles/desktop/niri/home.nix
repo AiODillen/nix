@@ -1,9 +1,10 @@
-{ lib, osConfig, ... }:
+{ lib, config, osConfig, ... }:
 let
   loc = osConfig.mySystem.locale;
+  colors = config.lib.stylix.colors;
   renderedKdl = lib.replaceStrings
-    [ "@XKB_LAYOUT@" "@XKB_VARIANT@" ]
-    [ loc.xkbLayout loc.xkbVariant ]
+    [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
+    [ loc.xkbLayout loc.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
     (builtins.readFile ./config.kdl);
 in
 {
