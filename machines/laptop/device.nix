@@ -6,6 +6,10 @@
 # home-manager settings — no NixOS system is built for the laptop.
 { ... }:
 {
+  # This machine's compositor choice. The desktop config (niri keybinds, gnome,
+  # waybar) is shared in profiles/desktop/ — only the choice is per-device.
+  mySystem.desktop = "niri"; # "niri" | "gnome"
+
   mySystem.standalone = {
     enable = true;
     user = "niklas";

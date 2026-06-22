@@ -40,6 +40,8 @@
     };
     hostname = "nixos";
 
+    desktop = "niri"; # "niri" | "gnome" — this machine's compositor (config is shared)
+
     kernel = "default"; # "default" | "latest" | "zen"
 
     gaming.gamescope = {
