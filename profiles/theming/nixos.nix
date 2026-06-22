@@ -5,7 +5,7 @@ in
 lib.mkIf cfg.theming.enable {
   # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
   # Stylix's kmscon module sets services.kmscon.config which no longer exists;
-  # matching disabledModules entry is in hosts/default/default.nix.
+  # matching disabledModules entry is in machines/pc/default.nix.
   # TODO: drop both once stylix release ≥ 26.05 ships the fix upstream.
   services.kmscon.enable = false;
 

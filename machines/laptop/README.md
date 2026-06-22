@@ -1,9 +1,12 @@
 # Laptop machine overlay
 
 Thin standalone home-manager overlay for this laptop. It imports the shared base
-in `../../template` (identity, profiles, theming — all driven by the `settings`
-the root flake assembles from `hosts/default/default.nix`) and adds only what is
-specific to this machine.
+in `../../template` (profiles, theming — all driven by `settings`, which the
+root flake derives from the shared `../../settings.nix` plus this machine's
+`device.nix`) and adds only what is specific to this machine.
+
+Device-specific values live in `device.nix` (standalone identity, gpu,
+flakePath) and `monitors.nix`; shared values live in `../../settings.nix`.
 
 Built via the `niklas` home-manager output in the root `flake.nix`:
 

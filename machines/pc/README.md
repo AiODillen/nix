@@ -1,9 +1,10 @@
 # Main PC (NixOS) — per-device config
 
-The PC is a NixOS host (built via `nixosConfigurations`, driven by
-`hosts/default/default.nix`), not a standalone home-manager target. This folder
-holds its **device-specific** config that doesn't belong in the shared
-`mySystem` options.
+The PC is a NixOS host (built via `nixosConfigurations`, assembled by
+`machines/pc/default.nix`), not a standalone home-manager target. Shared
+settings come from `../../settings.nix`; this folder holds the PC's
+**device-specific** config (identity, hostname, kernel, hardware, gamescope
+resolution, localAi GPU target, mounts, monitors).
 
 - **`monitors.nix` — output switching (kanshi, niri only).** Imports the shared
   `modules/home/monitors.nix` and supplies this machine's kanshi `profiles`. It

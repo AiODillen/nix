@@ -57,32 +57,27 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 
 ## Configuring it
 
-There is **one settings file for every config** — `hosts/default/default.nix`
-(the `mySystem` block), the same file the NixOS build uses. The standalone build
-inherits theming, locale, and the feature toggles from it.
+Settings split in two: **shared** values (theming, locale, desktop, feature
+toggles) live in the repo-root `settings.nix` — the same file the NixOS build
+uses — while **device-specific** values live per machine under `machines/`.
 
-Only **identity** differs per machine, and that lives in the `standalone`
-sub-block:
+The standalone laptop's device file is `machines/laptop/device.nix`:
 
 ```nix
-mySystem = {
-  # ... shared: theming.scheme, theming.polarity, locale.*, desktop, etc.
-
-  standalone = {
-    enable = true;       # exposes homeConfigurations.<user>
-    user   = "niklas";   # login user on the non-NixOS box (defaults to user.name)
-    gpu    = "mesa";     # "mesa" (Intel/AMD) | "nvidia" — picks the nixGL wrapper
-    flakePath = "~/Documents/nix";    # repo location; used by the `rebuild` alias
-    # homeDirectory = "/home/niklas";   # optional; defaults to /home/<user>
-  };
+mySystem.standalone = {
+  enable = true;       # exposes homeConfigurations.<user>
+  user   = "niklas";   # login user on the non-NixOS box (defaults to user.name)
+  gpu    = "mesa";     # "mesa" (Intel/AMD) | "nvidia" — picks the nixGL wrapper
+  flakePath = "~/Documents/nix";    # repo location; used by the `rebuild` alias
+  # homeDirectory = "/home/niklas";   # optional; defaults to /home/<user>
 };
 ```
 
-Change theme/locale/keyboard in the shared `mySystem` block (affects both the
-NixOS and standalone builds); change only the per-machine identity
-(`user`/`homeDirectory`), `gpu` vendor, and repo `flakePath` in `standalone`.
-Then `rebuild`. Theme scheme names: see the table in
-`hosts/default/default.nix` or `ls ${pkgs.base16-schemes}/share/themes/`.
+Change theme/locale/keyboard in `settings.nix` (affects both the NixOS and
+standalone builds); change only the per-machine identity (`user`/`homeDirectory`),
+`gpu` vendor, and repo `flakePath` in `machines/laptop/device.nix`. Then
+`rebuild`. Theme scheme names: see the table in `settings.nix` or
+`ls ${pkgs.base16-schemes}/share/themes/`.
 
 ### Feature toggles
 
