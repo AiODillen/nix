@@ -1,8 +1,9 @@
-{ lib, pkgs, settings, ... }:
+{ config, lib, pkgs, settings, ... }:
 let
+  colors = config.lib.stylix.colors;
   renderedKdl = lib.replaceStrings
-    [ "@XKB_LAYOUT@" "@XKB_VARIANT@" ]
-    [ settings.xkbLayout settings.xkbVariant ]
+    [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
+    [ settings.xkbLayout settings.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
     (builtins.readFile ../../profiles/desktop/niri/config.kdl);
 in
 {
