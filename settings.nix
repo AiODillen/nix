@@ -4,13 +4,12 @@
 #   (the NixOS PC and the standalone laptop) read these values. Device-specific
 #   config lives per machine under machines/<name>/.
 #
-#   Shared here:   theming, locale (incl. keyboard layout), timezone, and the
-#                  ai/gaming feature toggles. The desktop *config* (niri
-#                  keybinds/config.kdl, gnome, waybar) is also shared, in
-#                  profiles/desktop/.
-#   Per-device:    desktop *choice* (niri/gnome), identity, hostname, kernel,
-#                  hardware, gpu, monitors, mounts, gamescope resolution,
-#                  localAi GPU target — see machines/.
+#   Shared here:   theming, locale (incl. keyboard layout), timezone. The
+#                  desktop *config* (niri keybinds/config.kdl, gnome, waybar) is
+#                  also shared, in profiles/desktop/.
+#   Per-device:    desktop *choice* (niri/gnome), ai/gaming feature toggles,
+#                  identity, hostname, kernel, hardware, gpu, monitors, mounts,
+#                  gamescope resolution, localAi GPU target — see machines/.
 # ═══════════════════════════════════════════════════════════════════════════
 { ... }:
 {
@@ -24,10 +23,6 @@
       xkbLayout = "de";
       xkbVariant = "nodeadkeys";
     };
-
-    # ── Feature toggles (shared) ─────────────────────────────────────────────
-    ai.enable = false; # Claude Code, rtk, codegraph, nix-ld
-    gaming.enable = false; # Steam, gamescope, gaming home apps
 
     theming = {
       enable = true;

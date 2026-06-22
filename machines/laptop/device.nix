@@ -10,6 +10,10 @@
   # waybar) is shared in profiles/desktop/ — only the choice is per-device.
   mySystem.desktop = "niri"; # "niri" | "gnome"
 
+  # Feature toggles for this machine.
+  mySystem.ai.enable = false; # Claude Code, rtk, codegraph
+  mySystem.gaming.enable = false; # gaming home apps (vesktop, heroic, ...)
+
   mySystem.standalone = {
     enable = true;
     user = "niklas";

@@ -29,9 +29,9 @@ hostname, hardware, gpu, monitors, mounts) lives per machine under `machines/`:
    rm /mnt/etc/nixos/hardware-configuration.nix /mnt/etc/nixos/configuration.nix
    ```
 
-5. **Edit `settings.nix`** (shared: locale, theme, toggles) and
+5. **Edit `settings.nix`** (shared: locale, theme) and
    **`machines/pc/default.nix`** (this machine: username, hostname, desktop,
-   kernel, mounts, etc.). Find storage UUIDs with `lsblk -f`.
+   kernel, ai/gaming toggles, mounts, etc.). Find storage UUIDs with `lsblk -f`.
 
 6. Install:
 
@@ -76,8 +76,8 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 ```
 
 Shared settings come from the same `settings.nix` (`mySystem`) the NixOS build
-uses — theming, locale, and feature toggles. Device-specific values live in
-`machines/laptop/` (`device.nix` for desktop choice/identity/gpu/flakePath,
+uses — theming and locale. Device-specific values live in `machines/laptop/`
+(`device.nix` for desktop choice, ai/gaming toggles, identity, gpu, flakePath;
 `monitors.nix` for outputs). See `template/README.md` and
 `machines/laptop/README.md` for details. Notes:
 
@@ -94,7 +94,7 @@ uses — theming, locale, and feature toggles. Device-specific values live in
 
 ```
 flake.nix                 # PC nixosConfiguration + laptop homeConfiguration
-settings.nix              # ← SHARED settings (mySystem): theme, locale, toggles
+settings.nix              # ← SHARED settings (mySystem): theme, locale, timezone
 modules/
   options.nix             # mySystem option declarations (schema, shared)
   home/monitors.nix       # shared HM module: kanshi output switching

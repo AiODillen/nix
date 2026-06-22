@@ -44,9 +44,15 @@
 
     kernel = "default"; # "default" | "latest" | "zen"
 
-    gaming.gamescope = {
-      width = 3440;
-      height = 1440;
+    # ── Feature toggles (this machine) ─────────────────────────────────────
+    ai.enable = false; # Claude Code, rtk, codegraph, nix-ld
+
+    gaming = {
+      enable = false; # Steam, gamescope, gaming home apps
+      gamescope = {
+        width = 3440;
+        height = 1440;
+      };
     };
 
     localAi = {

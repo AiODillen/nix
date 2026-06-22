@@ -57,9 +57,10 @@ home-manager switch --flake ~/Documents/nix#niklas   # alias: rebuild
 
 ## Configuring it
 
-Settings split in two: **shared** values (theming, locale, desktop, feature
-toggles) live in the repo-root `settings.nix` — the same file the NixOS build
-uses — while **device-specific** values live per machine under `machines/`.
+Settings split in two: **shared** values (theming, locale, timezone) live in the
+repo-root `settings.nix` — the same file the NixOS build uses — while
+**device-specific** values (desktop choice, ai/gaming toggles, identity, gpu,
+monitors, ...) live per machine under `machines/`.
 
 The standalone laptop's device file is `machines/laptop/device.nix`:
 
