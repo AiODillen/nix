@@ -19,6 +19,16 @@ let
     exec ${nixGLIntel}/bin/nixGLIntel ${nixVulkanIntel}/bin/nixVulkanIntel \
       ${pkgs.niri}/bin/niri-session "$@"
   '';
+
+  # The session entry must land in a root-owned dir the greeter scans.
+  # home-manager runs as the user, so it calls `sudo` for exactly this one
+  # install command. A passwordless-sudo rule (installed once, see below) lets
+  # that run silently on every switch — install is pinned to fixed args so the
+  # grant is narrow.
+  sessionSrc = "${settings.homeDirectory}/.local/share/wayland-sessions/niri.desktop";
+  sessionDst = "/usr/share/wayland-sessions/niri.desktop";
+  installCmd = "/usr/bin/install -Dm644 ${sessionSrc} ${sessionDst}";
+  sudoersPath = "${settings.homeDirectory}/.config/niri-portable/niri-session.sudoers";
 in
 lib.mkIf (settings.desktop == "niri") {
   home.packages = with pkgs; [
@@ -83,16 +93,29 @@ lib.mkIf (settings.desktop == "niri") {
     Type=Application
   '';
 
-  # Copy the session entry into the system dir the greeter scans. Needs root,
-  # so this runs `sudo` during `home-manager switch` — only when the file
-  # actually changed (cmp guard), and never fails the switch if root is
-  # unavailable (it just prints the manual command instead).
+  # Ready-to-install passwordless-sudo rule for the one install command above.
+  # Install it ONCE (the activation prints this command until it is in place):
+  #   sudo install -m440 ~/.config/niri-portable/niri-session.sudoers \
+  #        /etc/sudoers.d/niri-session
+  home.file.".config/niri-portable/niri-session.sudoers".text = ''
+    # Lets `home-manager switch` place the niri session entry without a password.
+    # Pinned to exact arguments, so it grants nothing else.
+    ${settings.username} ALL=(root) NOPASSWD: ${installCmd}
+  '';
+
+  # Place the session entry into the system dir (root). Uses `sudo -n` so it
+  # never hangs on a prompt during a non-interactive switch: with the rule
+  # above it runs silently; without it, it prints the one-time setup command.
+  # cmp guard means it only acts when the entry actually changed.
   home.activation.installNiriSession = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    _src="${settings.homeDirectory}/.local/share/wayland-sessions/niri.desktop"
-    _dst="/usr/share/wayland-sessions/niri.desktop"
-    if [ -f "$_src" ] && ! cmp -s "$_src" "$_dst"; then
-      $DRY_RUN_CMD sudo install -Dm644 "$_src" "$_dst" \
-        || echo "warning: could not install $_dst as root — run: sudo cp $_src $_dst"
+    if [ -f "${sessionSrc}" ] && ! cmp -s "${sessionSrc}" "${sessionDst}"; then
+      if $DRY_RUN_CMD sudo -n ${installCmd} 2>/dev/null; then
+        :
+      else
+        echo "niri session entry needs a one-time passwordless-sudo rule. Run once:"
+        echo "  sudo install -m440 ${sudoersPath} /etc/sudoers.d/niri-session"
+        echo "Then re-run 'home-manager switch' — it installs the entry silently after that."
+      fi
     fi
   '';
 }
