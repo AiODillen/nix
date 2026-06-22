@@ -3,6 +3,7 @@
   imports = [
     ./profiles/core.nix
     ./profiles/shell.nix
+    ./profiles/locale.nix
   ];
 
   home.username = settings.username;
