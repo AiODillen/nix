@@ -37,6 +37,11 @@ window-rule {
     variable-refresh-rate true
 }
 
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 // Wifi/network editor (opened from the waybar network module): float, centered,
 // focused. niri centers newly-opened floating windows by default.
 window-rule {

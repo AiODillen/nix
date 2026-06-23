@@ -1,11 +1,19 @@
-{ config, lib, pkgs, inputs, vars, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  vars,
+  ...
+}:
 let
   colors = config.lib.stylix.colors;
   c = colors.withHashtag; # base00..base0F as "#rrggbb"
-  renderedKdl = lib.replaceStrings
-    [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
-    [ vars.xkbLayout vars.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
-    (builtins.readFile ./niri/config.kdl);
+  renderedKdl =
+    lib.replaceStrings
+      [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
+      [ vars.xkbLayout vars.xkbVariant "#${colors.base0D}" "#${colors.base01}" ]
+      (builtins.readFile ./niri/config.kdl);
 
   # wiremix has no stylix target; generate a base16 theme (inherits the built-in
   # "default" so any unset field falls back). foot is already stylix-themed, so
@@ -80,10 +88,10 @@ in
 {
   home.packages = with pkgs; [
     niri
-    niriWrapped          # `niri-nixgl` — nixGL-wrapped niri (ExecStart of niri.service)
-    waybarWrapped        # `waybar-portable` — waybar with LD_LIBRARY_PATH cleared
-    wiremix              # pipewire TUI mixer (opened from waybar audio module)
-    xwayland-satellite   # on-demand XWayland; niri exports $DISPLAY when present
+    niriWrapped # `niri-nixgl` — nixGL-wrapped niri (ExecStart of niri.service)
+    waybarWrapped # `waybar-portable` — waybar with LD_LIBRARY_PATH cleared
+    wiremix # pipewire TUI mixer (opened from waybar audio module)
+    xwayland-satellite # on-demand XWayland; niri exports $DISPLAY when present
     nautilus
     gnome-disk-utility
     pavucontrol
@@ -101,8 +109,14 @@ in
     Unit = {
       Description = "A scrollable-tiling Wayland compositor";
       BindsTo = [ "graphical-session.target" ];
-      Before = [ "graphical-session.target" "xdg-desktop-autostart.target" ];
-      Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+      Before = [
+        "graphical-session.target"
+        "xdg-desktop-autostart.target"
+      ];
+      Wants = [
+        "graphical-session-pre.target"
+        "xdg-desktop-autostart.target"
+      ];
       After = [ "graphical-session-pre.target" ];
     };
     Service = {
@@ -117,8 +131,14 @@ in
       Description = "Shutdown running niri session";
       DefaultDependencies = false;
       StopWhenUnneeded = true;
-      Conflicts = [ "graphical-session.target" "graphical-session-pre.target" ];
-      After = [ "graphical-session.target" "graphical-session-pre.target" ];
+      Conflicts = [
+        "graphical-session.target"
+        "graphical-session-pre.target"
+      ];
+      After = [
+        "graphical-session.target"
+        "graphical-session-pre.target"
+      ];
     };
   };
 
@@ -164,16 +184,40 @@ in
         position = "top";
         height = 36;
         spacing = 4;
-        "modules-left" = [ "niri/workspaces" ];
+
+        "modules-left" = [
+          "niri/workspaces"
+          "custom/separator"
+          "niri/window"
+        ];
         # niri exposes only ext-foreign-toplevel-list (read-only), not the
         # wlr-foreign-toplevel-management protocol wlr/taskbar needs, so a real
         # taskbar is impossible. niri/window shows the focused window title.
-        "modules-center" = [ "niri/window" "clock" ];
-        "modules-right" = [ "network" "pulseaudio" "battery" "power-profiles-daemon" "cpu" "memory" "tray" ];
+        "modules-center" = [ "clock" ];
+        "modules-right" = [
+          "network"
+          "custom/separator"
+          "pulseaudio"
+          "custom/separator"
+          "battery"
+          "custom/separator"
+          "power-profiles-daemon"
+          "custom/separator"
+          "cpu"
+          "custom/separator"
+          "memory"
+          "custom/separator"
+          "tray"
+        ];
         "niri/workspaces" = { };
         "niri/window" = {
           format = "{title}";
           max-length = 50;
+          tooltip = false;
+        };
+        "custom/separator" = {
+          format = "|";
+          interval = "once";
           tooltip = false;
         };
         clock = {
@@ -191,15 +235,26 @@ in
           format = "BAT {capacity}%";
           format-charging = "CHG {capacity}%";
           format-plugged = "AC {capacity}%";
-          states = { warning = 30; critical = 15; };
+          states = {
+            warning = 30;
+            critical = 15;
+          };
         };
         power-profiles-daemon = {
           format = "{profile}";
           tooltip-format = "Power profile: {profile}\nDriver: {driver}";
         };
-        cpu = { format = "CPU {usage}%"; interval = 5; };
-        memory = { format = "RAM {}%"; interval = 10; };
-        tray = { spacing = 8; };
+        cpu = {
+          format = "CPU {usage}%";
+          interval = 5;
+        };
+        memory = {
+          format = "RAM {}%";
+          interval = 10;
+        };
+        tray = {
+          spacing = 8;
+        };
         pulseaudio = {
           format = "VOL {volume}%";
           format-muted = "MUTE";

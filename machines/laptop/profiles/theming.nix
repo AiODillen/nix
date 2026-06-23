@@ -1,7 +1,15 @@
-{ pkgs, lib, vars, ... }:
+{
+  pkgs,
+  lib,
+  vars,
+  ...
+}:
 let
   # Resolve a "foo.bar" nixpkgs attr path (from vars.fonts) to the package.
-  font = f: { package = lib.getAttrFromPath (lib.splitString "." f.package) pkgs; inherit (f) name; };
+  font = f: {
+    package = lib.getAttrFromPath (lib.splitString "." f.package) pkgs;
+    inherit (f) name;
+  };
 in
 {
   stylix = {
@@ -19,7 +27,14 @@ in
     };
 
     targets.fish.enable = true;
+    targets.waybar.enable = true;
     targets.mako.enable = true;
+    targets.btop.enable = true;
+    targets.micro.enable = true;
+    targets.obsidian = {
+      enable = true;
+      vaultNames = [ "Documents/Obsidian Vault" ];
+    };
     targets.firefox = {
       enable = true;
       profileNames = [ "default" ];
@@ -30,6 +45,9 @@ in
     targets.vesktop.enable = true;
   };
 
+  programs.obsidian.enable = true;
+  programs.btop.enable = true;
+  programs.micro.enable = true;
   programs.firefox = {
     enable = true;
     # HM 26.05 defaults firefox config to the XDG path

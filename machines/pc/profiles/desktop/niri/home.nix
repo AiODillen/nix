@@ -4,7 +4,7 @@ let
   c = colors.withHashtag; # base00..base0F as "#rrggbb"
   renderedKdl = lib.replaceStrings
     [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
-    [ vars.xkbLayout vars.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
+    [ vars.xkbLayout vars.xkbVariant "#${colors.base0D}" "#${colors.base01}" ]
     (builtins.readFile ./config.kdl);
 
   # wiremix has no stylix target; generate a base16 theme (inherits the built-in
