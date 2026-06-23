@@ -1,8 +1,5 @@
-{ config, lib, pkgs, ... }:
-let
-  cfg = config.mySystem;
-in
-lib.mkIf cfg.theming.enable {
+{ pkgs, vars, ... }:
+{
   # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
   # Stylix's kmscon module sets services.kmscon.config which no longer exists;
   # matching disabledModules entry is in machines/pc/default.nix.
@@ -11,10 +8,10 @@ lib.mkIf cfg.theming.enable {
 
   stylix = {
     enable = true;
-    polarity = cfg.theming.polarity;
-    image = cfg.theming.wallpaper;
+    polarity = vars.polarity;
+    image = vars.wallpaper;
 
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/${cfg.theming.scheme}.yaml";
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/${vars.scheme}.yaml";
 
     fonts = {
       monospace = {
@@ -38,7 +35,8 @@ lib.mkIf cfg.theming.enable {
     };
 
     targets.fish.enable = true;
-    targets.gnome.enable = cfg.desktop == "gnome";
+    # This machine runs niri, not gnome.
+    targets.gnome.enable = false;
   };
 
   programs.firefox.policies.ExtensionSettings = {

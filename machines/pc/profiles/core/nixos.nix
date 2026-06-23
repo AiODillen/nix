@@ -1,38 +1,45 @@
-{ config, pkgs, ... }:
+{ pkgs, vars, ... }:
 let
-  cfg = config.mySystem;
   kernelPackages =
     {
       default = pkgs.linuxPackages;
       latest = pkgs.linuxPackages_latest;
       zen = pkgs.linuxPackages_zen;
     }
-    .${cfg.kernel};
+    .${vars.kernel};
 in
 {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = kernelPackages;
 
-  networking.hostName = cfg.hostname;
+  # networking.hostName is set in machines/pc/default.nix.
   networking.networkmanager.enable = true;
 
-  time.timeZone = cfg.timezone;
+  time.timeZone = vars.timezone;
 
-  i18n.defaultLocale = cfg.locale.main;
+  i18n.defaultLocale = vars.localeMain;
   i18n.extraLocaleSettings = {
-    LC_ADDRESS = cfg.locale.regional;
-    LC_IDENTIFICATION = cfg.locale.regional;
-    LC_MEASUREMENT = cfg.locale.regional;
-    LC_MONETARY = cfg.locale.regional;
-    LC_NAME = cfg.locale.regional;
-    LC_NUMERIC = cfg.locale.regional;
-    LC_PAPER = cfg.locale.regional;
-    LC_TELEPHONE = cfg.locale.regional;
-    LC_TIME = cfg.locale.regional;
+    LC_ADDRESS = vars.localeRegional;
+    LC_IDENTIFICATION = vars.localeRegional;
+    LC_MEASUREMENT = vars.localeRegional;
+    LC_MONETARY = vars.localeRegional;
+    LC_NAME = vars.localeRegional;
+    LC_NUMERIC = vars.localeRegional;
+    LC_PAPER = vars.localeRegional;
+    LC_TELEPHONE = vars.localeRegional;
+    LC_TIME = vars.localeRegional;
   };
 
-  console.keyMap = cfg.locale.consoleKeymap;
+  console.keyMap = vars.consoleKeymap;
+
+  # Primary user account (folded in from the old users/nixos.nix).
+  users.users.${vars.user} = {
+    isNormalUser = true;
+    description = vars.fullName;
+    shell = pkgs.fish;
+    extraGroups = vars.extraGroups;
+  };
 
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;

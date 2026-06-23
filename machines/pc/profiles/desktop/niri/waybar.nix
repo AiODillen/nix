@@ -1,5 +1,5 @@
-{ lib, osConfig, ... }:
-lib.mkIf (osConfig.mySystem.desktop == "niri") {
+{ ... }:
+{
   programs.waybar = {
     enable = true;
     settings = [

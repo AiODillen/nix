@@ -33,12 +33,14 @@
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
       # ── Main PC (NixOS) ──────────────────────────────────────────
-      # The host assembly layers the shared settings + profiles + this
-      # machine's device-specific values (machines/pc/). Identity (hostname,
-      # user) is read back from mySystem so output naming/checks stay in sync.
+      # Self-contained per-machine tree under machines/pc/. All config values
+      # come from machines/pc/vars.nix, threaded to system + home modules as
+      # `vars` via specialArgs.
+      pcVars = import ./machines/pc/vars.nix;
+
       system = lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        specialArgs = { inherit inputs; vars = pcVars; };
         modules = [
           { nixpkgs.overlays = [ inputs.nur.overlays.default ]; }
           home-manager.nixosModules.home-manager
@@ -46,7 +48,6 @@
           ./machines/pc/default.nix
         ];
       };
-      cfg = system.config.mySystem;
 
       # ── Mint laptop (standalone home-manager, non-NixOS) ─────────
       laptopVars = import ./machines/laptop/vars.nix;
@@ -58,7 +59,7 @@
       };
     in
     {
-      nixosConfigurations.${cfg.hostname} = system;
+      nixosConfigurations.${pcVars.hostname} = system;
 
       homeConfigurations.${laptopVars.user} = home-manager.lib.homeManagerConfiguration {
         pkgs = hmPkgs;
@@ -69,17 +70,15 @@
         ];
       };
 
-      checks.x86_64-linux = nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
-        niri-config =
-          let
-            kdl = system.config.home-manager.users.${cfg.user.name}
-                    .xdg.configFile."niri/config.kdl".text;
-          in
-          pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
-            echo ${pkgs.lib.escapeShellArg kdl} > config.kdl
-            niri validate --config config.kdl
-            touch $out
-          '';
-      };
+      checks.x86_64-linux.niri-config =
+        let
+          kdl = system.config.home-manager.users.${pcVars.user}
+                  .xdg.configFile."niri/config.kdl".text;
+        in
+        pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
+          echo ${pkgs.lib.escapeShellArg kdl} > config.kdl
+          niri validate --config config.kdl
+          touch $out
+        '';
     };
 }

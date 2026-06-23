@@ -1,5 +1,5 @@
-{ config, lib, pkgs, ... }:
-lib.mkIf (config.mySystem.desktop == "niri") {
+{ config, pkgs, vars, ... }:
+{
   programs.niri = {
     enable = true;
     useNautilus = true;
@@ -19,7 +19,7 @@ lib.mkIf (config.mySystem.desktop == "niri") {
     enable = true;
     settings.default_session = {
       command = "${config.programs.niri.package}/bin/niri-session";
-      user = config.mySystem.user.name;
+      user = vars.user;
     };
   };
 
