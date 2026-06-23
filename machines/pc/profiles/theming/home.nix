@@ -9,7 +9,7 @@
     # See template/profiles/theming.nix for the rationale. `extensions.force` is
     # required by stylix colorTheme and is safe (it only overwrites FirefoxColor
     # data, not installed extensions or logins). The profile-repoint wipe risk is
-    # handled by ./firefox-profile.nix.
+    # handled by ../../firefox-profile.nix.
     profiles.default = {
       isDefault = true;
       extensions.force = true;

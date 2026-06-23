@@ -58,7 +58,7 @@
     # does not touch logins or other extensions' state (e.g. Proton Pass vault,
     # which lives under storage/default/). The real wipe risk — HM repointing
     # Firefox at an empty "default" dir on a machine whose data is in a random-
-    # named profile — is handled by ../../modules/home/firefox-profile.nix,
+    # named profile — is handled by ../firefox-profile.nix,
     # which adopts the existing profile on first activation.
     profiles.default = {
       isDefault = true;
