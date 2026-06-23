@@ -1,15 +1,15 @@
-{ config, lib, pkgs, inputs, settings, ... }:
+{ config, lib, pkgs, inputs, vars, ... }:
 let
   colors = config.lib.stylix.colors;
   renderedKdl = lib.replaceStrings
     [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
-    [ settings.xkbLayout settings.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
-    (builtins.readFile ../../profiles/desktop/niri/config.kdl);
+    [ vars.xkbLayout vars.xkbVariant "#${colors.base0E}" "#${colors.base01}" ]
+    (builtins.readFile ./niri/config.kdl);
 
   # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with gpu.nix.
   # Non-NixOS has no /run/opengl-driver, so nix GPU apps can't find the system
   # driver; these wrap a program with the right libs.
-  nixgl = import ./nixgl.nix { inherit pkgs inputs settings; };
+  nixgl = import ../nixgl.nix { inherit pkgs inputs vars; };
 
   # Run niri under both shims so its GL + Vulkan renderers find the GPU.
   # niri.service (below) uses this as ExecStart; niri-session itself needs no
@@ -24,12 +24,12 @@ let
   # install command. A passwordless-sudo rule (installed once, see below) lets
   # that run silently on every switch — install is pinned to fixed args so the
   # grant is narrow.
-  sessionSrc = "${settings.homeDirectory}/.local/share/wayland-sessions/niri.desktop";
+  sessionSrc = "${vars.homeDirectory}/.local/share/wayland-sessions/niri.desktop";
   sessionDst = "/usr/share/wayland-sessions/niri.desktop";
   installCmd = "/usr/bin/install -Dm644 ${sessionSrc} ${sessionDst}";
-  sudoersPath = "${settings.homeDirectory}/.config/niri-portable/niri-session.sudoers";
+  sudoersPath = "${vars.homeDirectory}/.config/niri-portable/niri-session.sudoers";
 in
-lib.mkIf (settings.desktop == "niri") {
+{
   home.packages = with pkgs; [
     niri
     niriWrapped          # `niri-nixgl` — nixGL-wrapped niri (ExecStart of niri.service)
@@ -117,7 +117,7 @@ lib.mkIf (settings.desktop == "niri") {
     [Desktop Entry]
     Name=Niri (nix)
     Comment=A scrollable-tiling Wayland compositor
-    Exec=${settings.homeDirectory}/.nix-profile/bin/niri-session
+    Exec=${vars.homeDirectory}/.nix-profile/bin/niri-session
     Type=Application
   '';
 
@@ -128,7 +128,7 @@ lib.mkIf (settings.desktop == "niri") {
   home.file.".config/niri-portable/niri-session.sudoers".text = ''
     # Lets `home-manager switch` place the niri session entry without a password.
     # Pinned to exact arguments, so it grants nothing else.
-    ${settings.username} ALL=(root) NOPASSWD: ${installCmd}
+    ${vars.user} ALL=(root) NOPASSWD: ${installCmd}
   '';
 
   # Place the session entry into the system dir (root). Uses `sudo -n` so it

@@ -1,16 +1,24 @@
-# Laptop machine overlay.
-#
-# Thin layer over the shared standalone base in ../../template: it pulls the
-# entire template (identity, profiles, theming — all still driven by `settings`
-# from the root flake) and adds only what is specific to this machine. Right
-# now that is the monitor switching in ./monitors.nix.
-#
-# Built via the `niklas` home-manager output in the root flake.nix:
-#   home-manager switch --flake .#niklas
-{ ... }:
+# Laptop standalone home-manager entry. Self-contained: imports this machine's
+# own profiles + helper modules. Built via the `niklas` homeConfigurations
+# output in the root flake.nix.
+{ vars, ... }:
 {
   imports = [
-    ../../template/home.nix
+    ./firefox-profile.nix
+    ./profiles/core.nix
+    ./profiles/shell.nix
+    ./profiles/locale.nix
+    ./profiles/theming.nix
+    ./profiles/ai.nix
+    ./profiles/gaming.nix
+    ./profiles/gpu.nix
+    ./profiles/niri.nix
     ./monitors.nix
   ];
+
+  home.username = vars.user;
+  home.homeDirectory = vars.homeDirectory;
+  home.stateVersion = "26.05";
+
+  programs.home-manager.enable = true;
 }

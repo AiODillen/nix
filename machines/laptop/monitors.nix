@@ -5,15 +5,14 @@
 # this machine's profiles and enables them when the desktop is niri (kanshi
 # can't drive GNOME). Connector names from `niri msg outputs`.
 {
-
-  settings,
+  vars,
   ...
 }:
 {
-  imports = [ ../../modules/home/monitors.nix ];
+  imports = [ ./_monitors-lib.nix ];
 
   monitors = {
-    enable = settings.desktop == "niri";
+    enable = true;
     fallbackAllOn = true;
     profiles = [
       {

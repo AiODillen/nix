@@ -1,7 +1,7 @@
-{ pkgs, inputs, settings, ... }:
+{ pkgs, inputs, vars, ... }:
 let
   # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with niri.nix.
-  nixgl = import ./nixgl.nix { inherit pkgs inputs settings; };
+  nixgl = import ../nixgl.nix { inherit pkgs inputs vars; };
 in
 {
   home.packages = [

@@ -1,4 +1,4 @@
-{ lib, pkgs, settings, ... }:
+{ lib, pkgs, ... }:
 let
   cavemanVersion = "25d22f864ad6";
   cavemanRev = "25d22f864ad68cc447a4cb93aefde918aa4aec9f";
@@ -109,7 +109,7 @@ EOF_AI
     fi
   '';
 in
-lib.mkIf settings.ai {
+{
   home.sessionPath = [ "$HOME/.npm-global/bin" ];
 
   # ~/.claude text files — written only if absent (never clobber an existing setup).

@@ -1,11 +1,11 @@
-{ lib, pkgs, settings, ... }:
-lib.mkIf settings.theming {
+{ pkgs, vars, ... }:
+{
   stylix = {
     enable = true;
-    polarity = settings.polarity;
-    image = settings.wallpaper;
+    polarity = vars.polarity;
+    image = vars.wallpaper;
 
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/${settings.scheme}.yaml";
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/${vars.scheme}.yaml";
 
     fonts = {
       monospace = {

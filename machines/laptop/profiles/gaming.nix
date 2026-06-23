@@ -1,5 +1,5 @@
-{ lib, pkgs, settings, ... }:
-lib.mkIf settings.gaming {
+{ pkgs, ... }:
+{
   programs.mangohud.enable = true;
   programs.vesktop.enable = true;
 

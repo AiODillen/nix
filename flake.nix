@@ -49,56 +49,24 @@
       cfg = system.config.mySystem;
 
       # ── Mint laptop (standalone home-manager, non-NixOS) ─────────
-      # Derive the laptop's mySystem by evaluating the shared schema + shared
-      # settings + the laptop's device file — WITHOUT building a NixOS system.
-      # Shared values (theming/locale/desktop/toggles) come from settings.nix;
-      # only device-specific bits live in machines/laptop/device.nix.
-      # Built with `home-manager switch --flake .#<standalone.user>`.
-      laptopCfg =
-        (lib.evalModules {
-          modules = [
-            ./modules/options.nix
-            ./settings.nix
-            ./machines/laptop/device.nix
-          ];
-        }).config.mySystem;
+      laptopVars = import ./machines/laptop/vars.nix;
 
       hmPkgs = import nixpkgs {
         system = "x86_64-linux";
         config.allowUnfree = true;
         overlays = [ inputs.nur.overlays.default ];
       };
-      hmSettings = {
-        username       = laptopCfg.standalone.user;
-        homeDirectory  = laptopCfg.standalone.homeDirectory;
-        gpu            = laptopCfg.standalone.gpu;
-        flakePath      = laptopCfg.standalone.flakePath;
-        scheme         = laptopCfg.theming.scheme;
-        polarity       = laptopCfg.theming.polarity;
-        wallpaper      = laptopCfg.theming.wallpaper;
-        localeMain     = laptopCfg.locale.main;
-        localeRegional = laptopCfg.locale.regional;
-        xkbLayout      = laptopCfg.locale.xkbLayout;
-        xkbVariant     = laptopCfg.locale.xkbVariant;
-        # feature toggles — mirror the NixOS profile enables
-        theming        = laptopCfg.theming.enable;
-        ai             = laptopCfg.ai.enable;
-        gaming         = laptopCfg.gaming.enable;
-        desktop        = laptopCfg.desktop;
-      };
     in
     {
       nixosConfigurations.${cfg.hostname} = system;
 
-      homeConfigurations = lib.optionalAttrs laptopCfg.standalone.enable {
-        ${hmSettings.username} = home-manager.lib.homeManagerConfiguration {
-          pkgs = hmPkgs;
-          extraSpecialArgs = { inherit inputs; settings = hmSettings; };
-          modules = [
-            inputs.stylix.homeModules.stylix
-            ./machines/laptop/home.nix
-          ];
-        };
+      homeConfigurations.${laptopVars.user} = home-manager.lib.homeManagerConfiguration {
+        pkgs = hmPkgs;
+        extraSpecialArgs = { inherit inputs; vars = laptopVars; };
+        modules = [
+          inputs.stylix.homeModules.stylix
+          ./machines/laptop/home.nix
+        ];
       };
 
       checks.x86_64-linux = nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
