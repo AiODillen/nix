@@ -1,3 +1,6 @@
+# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
+# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
+# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
 {
   lib,
   osConfig,

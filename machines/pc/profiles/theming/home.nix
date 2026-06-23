@@ -4,9 +4,9 @@
     enable = true;
     # Pin legacy path: HM 26.05 would otherwise write to
     # ~/.config/mozilla/firefox, which Firefox ignores. See
-    # template/profiles/theming.nix for the full rationale.
+    # machines/laptop/profiles/theming.nix for the full rationale.
     configPath = ".mozilla/firefox";
-    # See template/profiles/theming.nix for the rationale. `extensions.force` is
+    # See machines/laptop/profiles/theming.nix for the rationale. `extensions.force` is
     # required by stylix colorTheme and is safe (it only overwrites FirefoxColor
     # data, not installed extensions or logins). The profile-repoint wipe risk is
     # handled by ../../firefox-profile.nix.
