@@ -15,6 +15,9 @@
     };
 
     nur.follows = "stylix/nur";
+
+    # GPU driver shim for running nix GUI apps on non-NixOS (standalone only).
+    nixgl.url = "github:nix-community/nixGL";
   };
 
   outputs =
@@ -26,35 +29,56 @@
       ...
     }@inputs:
     let
+      lib = nixpkgs.lib;
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      # Build the system once; read identity (hostname, user) from mySystem so
-      # the flake output naming and checks stay in sync with the single config file.
-      system = nixpkgs.lib.nixosSystem {
+
+      # ── Main PC (NixOS) ──────────────────────────────────────────
+      # Self-contained per-machine tree under machines/pc/. All config values
+      # come from machines/pc/vars.nix, threaded to system + home modules as
+      # `vars` via specialArgs.
+      pcVars = import ./machines/pc/vars.nix;
+
+      system = lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        specialArgs = { inherit inputs; vars = pcVars; };
         modules = [
           { nixpkgs.overlays = [ inputs.nur.overlays.default ]; }
           home-manager.nixosModules.home-manager
           stylix.nixosModules.stylix
-          ./hosts/default/default.nix
+          ./machines/pc/default.nix
         ];
       };
-      cfg = system.config.mySystem;
+
+      # ── Mint laptop (standalone home-manager, non-NixOS) ─────────
+      laptopVars = import ./machines/laptop/vars.nix;
+
+      hmPkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+        overlays = [ inputs.nur.overlays.default ];
+      };
     in
     {
-      nixosConfigurations.${cfg.hostname} = system;
+      nixosConfigurations.${pcVars.hostname} = system;
 
-      checks.x86_64-linux = nixpkgs.lib.optionalAttrs (cfg.desktop == "niri") {
-        niri-config =
-          let
-            kdl = system.config.home-manager.users.${cfg.user.name}
-                    .xdg.configFile."niri/config.kdl".text;
-          in
-          pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
-            echo ${pkgs.lib.escapeShellArg kdl} > config.kdl
-            niri validate --config config.kdl
-            touch $out
-          '';
+      homeConfigurations.${laptopVars.user} = home-manager.lib.homeManagerConfiguration {
+        pkgs = hmPkgs;
+        extraSpecialArgs = { inherit inputs; vars = laptopVars; };
+        modules = [
+          inputs.stylix.homeModules.stylix
+          ./machines/laptop/home.nix
+        ];
       };
+
+      checks.x86_64-linux.niri-config =
+        let
+          kdl = system.config.home-manager.users.${pcVars.user}
+                  .xdg.configFile."niri/config.kdl".text;
+        in
+        pkgs.runCommand "niri-config-check" { buildInputs = [ pkgs.niri ]; } ''
+          echo ${pkgs.lib.escapeShellArg kdl} > config.kdl
+          niri validate --config config.kdl
+          touch $out
+        '';
     };
 }
