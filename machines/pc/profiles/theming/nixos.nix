@@ -1,4 +1,8 @@
-{ pkgs, vars, ... }:
+{ pkgs, lib, vars, ... }:
+let
+  # Resolve a "foo.bar" nixpkgs attr path (from vars.fonts) to the package.
+  font = f: { package = lib.getAttrFromPath (lib.splitString "." f.package) pkgs; inherit (f) name; };
+in
 {
   # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
   # Stylix's kmscon module sets services.kmscon.config which no longer exists;
@@ -14,24 +18,10 @@
     base16Scheme = "${pkgs.base16-schemes}/share/themes/${vars.scheme}.yaml";
 
     fonts = {
-      monospace = {
-        package = pkgs.nerd-fonts.jetbrains-mono;
-        name = "JetBrainsMono Nerd Font Mono";
-      };
-      sansSerif = {
-        package = pkgs.inter;
-        name = "Inter";
-      };
-      serif = {
-        package = pkgs.dejavu_fonts;
-        name = "DejaVu Serif";
-      };
-      sizes = {
-        applications = 12;
-        terminal = 13;
-        desktop = 11;
-        popups = 11;
-      };
+      monospace = font vars.fonts.monospace;
+      sansSerif = font vars.fonts.sansSerif;
+      serif = font vars.fonts.serif;
+      sizes = vars.fonts.sizes;
     };
 
     targets.fish.enable = true;

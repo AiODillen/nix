@@ -21,6 +21,12 @@ let
 in
 lib.mkIf managed {
   home.activation.adoptFirefoxDefaultProfile = lib.hm.dag.entryBefore [ "writeBoundary" ] ''
+    # NOTE: HM concatenates all activation blocks into ONE bash script, so a bare
+    # `exit` here would abort the entire activation (linkGeneration, installPackages,
+    # …) — which silently froze this machine at an old generation. Run the whole
+    # adoption in a subshell so its `exit`s are local; `|| exit 1` still lets the
+    # Firefox-running guard (real exit 1) abort the switch to protect profile data.
+    (
     # Same dir HM writes profiles.ini / profile data to (programs.firefox.configPath).
     mozdir="${config.home.homeDirectory}/${cfg.configPath}"
 
@@ -74,5 +80,6 @@ lib.mkIf managed {
     fi
     $DRY_RUN_CMD mv "$realdir" "$mozdir/default"
     $DRY_RUN_CMD mv "$ini" "$ini.firefox-orig"
+    ) || exit 1
   '';
 }

@@ -37,12 +37,29 @@ window-rule {
     variable-refresh-rate true
 }
 
-spawn-at-startup "waybar"
+// Wifi/network editor (opened from the waybar network module): float, centered,
+// focused. niri centers newly-opened floating windows by default.
+window-rule {
+    match app-id="nm-connection-editor"
+    open-floating true
+    open-focused true
+}
+
+// Audio TUI (wiremix in foot, opened from the waybar audio module): float,
+// centered, focused.
+window-rule {
+    match app-id="audio-tui"
+    open-floating true
+    open-focused true
+}
+
+spawn-at-startup "waybar-portable"
 spawn-at-startup "mako"
 
 binds {
     Mod+T { spawn "foot"; }
-    Mod+Space { spawn "fuzzel"; }
+    // Toggle: press once to open fuzzel, again to dismiss it.
+    Mod+Space { spawn "sh" "-c" "pkill -x fuzzel || fuzzel"; }
     Mod+Q { close-window; }
     Mod+Shift+E { quit; }
     Mod+F { maximize-column; }

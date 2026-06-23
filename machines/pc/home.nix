@@ -6,6 +6,7 @@
     ./firefox-profile.nix
     ./profiles/core/home.nix
     ./profiles/theming/home.nix
+    ./profiles/theming/gram.nix
     ./profiles/desktop/niri/home.nix
     ./profiles/shell/home.nix
     ./monitors.nix

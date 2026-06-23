@@ -12,6 +12,7 @@
     ./profiles/ai.nix
     ./profiles/gaming.nix
     ./profiles/gpu.nix
+    ./profiles/gram.nix
     ./profiles/niri.nix
     ./monitors.nix
   ];

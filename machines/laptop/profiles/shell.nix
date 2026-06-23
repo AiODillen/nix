@@ -3,10 +3,9 @@
   programs.fish = {
     enable = true;
     shellAliases = {
-      # Standalone home-manager rebuild. Flake path + output name come from
-      # mySystem.standalone (flakePath / user), so a machine that clones the
-      # repo elsewhere only edits that block, not this alias.
-      rebuild = "home-manager switch --flake ${vars.flakePath}#${vars.user}";
+      # Standalone home-manager rebuild against the flake in the current dir
+      # (cd into the repo first). Output name comes from vars.user.
+      rebuild = "home-manager switch --flake .#${vars.user}";
       zzz = "systemctl suspend";
     };
   };
