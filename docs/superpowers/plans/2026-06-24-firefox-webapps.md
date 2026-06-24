@@ -1,5 +1,21 @@
 # Firefox Webapps Implementation Plan
 
+> **SUPERSEDED (2026-06-24, post-implementation):** The firefoxpwa approach
+> below was built and verified, then abandoned. firefoxpwa uses its own
+> separate profile/runtime and cannot share the main Firefox profile, so its
+> app windows lacked the user's extensions (uBlock, Proton Pass). It was
+> replaced by **dedicated-profile Firefox site-specific browsers**: one
+> Firefox profile per app (Teams, Outlook), chromeless via userChrome,
+> launched `firefox -P <id> --class <id> --name <id> --no-remote <url>` for a
+> distinct niri app-id, inheriting the global `ExtensionSettings` policy so
+> the app windows carry the same extensions. Outlook needs no web-app
+> manifest in this model. Implemented in `machines/_webapps-lib.nix`
+> (`hmConfig`), `machines/laptop/profiles/webapps.nix`, and
+> `machines/pc/profiles/webapps/home.nix`; verified live on the laptop
+> (profiles, launchers, app-id `teams`, forced extensions). Empirically
+> confirmed `firefox --class X` => niri App ID "X". The firefoxpwa task
+> breakdown below is retained for history only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Install Microsoft Teams and Outlook as standalone Firefox-backed PWAs (via `firefoxpwa`) with their own launchers, declaratively, on the laptop (standalone Home Manager, Linux Mint) and the pc (NixOS).

@@ -1,7 +1,16 @@
 # Firefox Webapps Module (Teams + Outlook via firefoxpwa)
 
 **Date:** 2026-06-24
-**Status:** Approved design, pending implementation plan
+**Status:** SUPERSEDED — see revision note below.
+
+> **Revision (2026-06-24, post-implementation):** This firefoxpwa design was
+> implemented and then replaced. firefoxpwa cannot share the main Firefox
+> profile (its own runtime + profile), so its app windows lacked the user's
+> extensions. Final approach: **dedicated-profile Firefox site-specific
+> browsers** — one Firefox profile per app (chromeless via userChrome),
+> launched with `--class/--name` for a distinct niri app-id, inheriting the
+> global `ExtensionSettings` policy for extensions. Outlook needs no manifest
+> in this model. The firefoxpwa design below is kept for history.
 
 ## Goal
 
