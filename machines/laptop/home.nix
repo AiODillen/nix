@@ -14,6 +14,7 @@
     ./profiles/gpu.nix
     ./profiles/gram.nix
     ./profiles/niri.nix
+    ./profiles/webapps.nix
     ./monitors.nix
   ];
 
