@@ -67,11 +67,10 @@ Hand-rolled `systemd.user.services.swayidle`, mirroring the existing
 - `Unit`: `PartOf` / `After` = `graphical-session.target` so it inherits
   `WAYLAND_DISPLAY`; `Description`.
 - `Service`:
-  `ExecStart = swayidle -w -d lock 'swaylock -f' before-sleep 'swaylock -f'`
+  `ExecStart = swayidle -w lock 'swaylock -f' before-sleep 'swaylock -f'`
   - `-w` — wait for the child (swaylock fork) to finish before releasing the
     sleep inhibitor. **Critical**: without it, the machine can suspend before
     the lock surface exists, leaving a brief unlocked window on resume.
-  - `-d` — debug logging to the journal (drop later if noisy; optional).
   - `lock` event — covers `loginctl lock-session` and the manual keybind.
   - `before-sleep` event — the lid-close → suspend path.
   - `swaylock -f` — fork into the background after the lock surface is shown so
