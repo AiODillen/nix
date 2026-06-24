@@ -12,9 +12,9 @@
 
 - `firefoxpwa` attribute = `pkgs.firefoxpwa` (the wrapped one; `firefoxpwa-unwrapped` is the connector-only build — do NOT use it directly). Baked runtime is found via `FFPWA_SYSDATA`, which the wrapper sets; always invoke via the absolute store path `${pkgs.firefoxpwa}/bin/firefoxpwa`.
 - Extension id: `firefoxpwa@filips.si`, package `pkgs.nur.repos.rycee.firefox-addons.pwas-for-firefox` (NUR already wired via `inputs.nur.overlays.default`).
-- Webapps (source of truth):
-  - `{ name = "Microsoft Teams"; url = "https://teams.microsoft.com/"; }`
-  - `{ name = "Outlook"; url = "https://outlook.office.com/mail/"; }`
+- Webapps (declarative, source of truth). The positional arg to `firefoxpwa site install` is the **manifest URL**, not the page URL, and firefoxpwa enforces that the manifest origin matches the app's `start_url` origin:
+  - `{ name = "Microsoft Teams"; manifestUrl = "https://teams.microsoft.com/manifest.json"; }`
+- **Outlook is NOT in the declarative list.** Its web-app manifest is auth-gated (empty when unauthenticated) and the same-origin rule blocks any localhost/file workaround, so it cannot be installed headlessly. Outlook is installed once per machine via the browser extension's "Install" button while logged in. The module still ships the connector + extension so that click works; no activation entry for Outlook.
 - The site-install activation MUST be idempotent and MUST be wrapped so it can never abort a switch: `( … ) || true`, with internal logic in a subshell (HM concatenates all activation blocks into one bash script).
 - Firefox configPath on both machines is the legacy `.mozilla/firefox`; the per-user native-messaging dir on the laptop is therefore `~/.mozilla/native-messaging-hosts/`.
 - "Build" = Nix evaluation. There is no unit-test framework; the test cycle for each task is: evaluate/build the config (catches Nix errors) → `switch` → verify observable behavior. Commit after each task.
@@ -22,38 +22,15 @@
 
 ---
 
-## Task 0: Confirm the firefoxpwa CLI surface (no code)
+## Task 0: Confirm the firefoxpwa CLI surface — DONE (findings recorded)
 
-**Files:** none (investigation that pins the exact flags used by every later task).
+Already completed empirically on the laptop (firefoxpwa 2.18.2). Findings, used verbatim by later tasks:
 
-**Interfaces:**
-- Produces: the confirmed `firefoxpwa site install` invocation and the confirmed `firefoxpwa profile list` output substring used as the idempotency grep key.
-
-- [ ] **Step 1: Get firefoxpwa into the shell**
-
-Run:
-```bash
-. ~/.nix-profile/etc/profile.d/nix.sh 2>/dev/null
-nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#firefoxpwa -c firefoxpwa --version
-```
-Expected: prints `firefoxpwa 2.18.x`.
-
-- [ ] **Step 2: Read the install + list help**
-
-Run:
-```bash
-nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#firefoxpwa -c firefoxpwa site install --help
-nix --extra-experimental-features 'nix-command flakes' shell nixpkgs#firefoxpwa -c firefoxpwa profile list --help
-```
-Expected: confirms the positional `<MANIFEST_URL>` / document-url argument and the `--name`, `--start-url`, and (if present) a no-manifest flag. Note the exact flag names.
-
-- [ ] **Step 3: Record findings**
-
-Confirm and write down (used verbatim in Tasks 2/4):
-- the install command form — expected `firefoxpwa site install <url> --name "<name>"`, plus `--start-url <url>` if `<url>` alone yields no installable manifest;
-- the `profile list` line that contains the app name (the idempotency grep key — expected the literal app name, e.g. `Microsoft Teams`).
-
-If `site install <url> --name` rejects a site for lack of a manifest, the fix is to add `--start-url <url>` (and, if required by this firefoxpwa version, a no-manifest flag from the help output). Carry the confirmed form into Tasks 2 and 4.
+- `firefoxpwa site install <MANIFEST_URL> --name <NAME>` — the positional is the **manifest URL** (a JSON web-app manifest), NOT the page URL. Passing a page URL fails with "Failed to parse web app manifest / expected value at line 1 column 1" (it gets HTML).
+- firefoxpwa enforces **same-origin** between the manifest URL and the app `start_url`; `file://` is rejected ("URL scheme is not allowed"). So a manifest cannot be self-hosted to point at a third-party origin.
+- **Teams installs cleanly** headless: `firefoxpwa site install https://teams.microsoft.com/manifest.json --name "Microsoft Teams"` → "Web app installed". (Already installed during investigation; activation will see it present and skip — idempotent.)
+- **Outlook cannot** install headless: every `outlook.office.com[…]/manifest.json` returns HTTP 200 size 0 unauthenticated. → handled via the browser extension (see Task 2 Step 9 note), not the activation list.
+- `firefoxpwa profile list` prints each installed app as `- <name>: <url> (<ULID>)`. Idempotency grep key = the literal app name (e.g. `Microsoft Teams`).
 
 *(No commit — investigation only.)*
 
@@ -66,29 +43,34 @@ If `site install <url> --name` rejects a site for lack of a manifest, the fix is
 
 **Interfaces:**
 - Produces:
-  - `webapps` — a list of `{ name :: string; url :: string; }`.
+  - `webapps` — a list of `{ name :: string; manifestUrl :: string; }` (declaratively installable apps only). Currently just Teams.
   - `installScript { firefoxpwa }` — a function taking the `pkgs.firefoxpwa` derivation and returning a bash string: an idempotent, `|| true`-guarded subshell that installs each webapp in `webapps` if `firefoxpwa profile list` does not already name it. Invokes the connector as `${firefoxpwa}/bin/firefoxpwa`.
 
 - [ ] **Step 1: Write the helper**
 
 Create `machines/_webapps-lib.nix`:
 ```nix
-# Shared definition of the Firefox PWAs (Teams, Outlook) and the idempotent
+# Shared definition of the headless-installable Firefox PWAs and the idempotent
 # `firefoxpwa site install` snippet, so the laptop (HM) and pc (NixOS+HM)
 # activation scripts install the same set from one source of truth.
+#
+# Only apps that serve an unauthenticated web-app manifest can be installed
+# this way (the positional arg is the MANIFEST URL, and firefoxpwa requires the
+# manifest origin == start_url origin). Teams qualifies. Outlook does NOT — its
+# manifest is auth-gated — so Outlook is installed via the browser extension,
+# not here.
 { lib }:
 let
   webapps = [
-    { name = "Microsoft Teams"; url = "https://teams.microsoft.com/"; }
-    { name = "Outlook"; url = "https://outlook.office.com/mail/"; }
+    { name = "Microsoft Teams"; manifestUrl = "https://teams.microsoft.com/manifest.json"; }
   ];
 
   # Render one idempotent install line per webapp. `firefoxpwa profile list`
-  # prints each installed site's name; skip install when the name is already
-  # present. Names are fixed strings here, so a plain grep -F is safe.
+  # prints each installed app as `- <name>: <url> (<ULID>)`; skip install when
+  # the name is already present. Names are fixed strings here, so grep -F is safe.
   installLine = ffpwa: app: ''
     "${ffpwa}/bin/firefoxpwa" profile list 2>/dev/null | grep -qF ${lib.escapeShellArg app.name} \
-      || "${ffpwa}/bin/firefoxpwa" site install ${lib.escapeShellArg app.url} --name ${lib.escapeShellArg app.name}
+      || "${ffpwa}/bin/firefoxpwa" site install ${lib.escapeShellArg app.manifestUrl} --name ${lib.escapeShellArg app.name}
   '';
 
   # Whole block in a subshell + `|| true`: HM concatenates all activation
@@ -106,8 +88,6 @@ in
 }
 ```
 
-> If Task 0 found that a webapp needs `--start-url`, add `--start-url ${lib.escapeShellArg app.url}` to the `site install` line in `installLine`. If a webapp needs a different start URL than its document URL, add a `startUrl` field to its record and use it.
-
 - [ ] **Step 2: Verify it evaluates**
 
 Run:
@@ -116,7 +96,7 @@ Run:
 nix --extra-experimental-features 'nix-command flakes' eval --impure --expr \
   'let lib = (import <nixpkgs> {}).lib; m = import ./machines/_webapps-lib.nix { inherit lib; }; in builtins.length m.webapps' 2>&1 | tail -1
 ```
-Expected: prints `2`.
+Expected: prints `1`.
 
 - [ ] **Step 3: Commit**
 
@@ -214,9 +194,9 @@ firefoxpwa profile list
 ls ~/.mozilla/native-messaging-hosts/firefoxpwa.json
 ls ~/.local/share/applications/FFPWA-*.desktop
 ```
-Expected: `profile list` shows "Microsoft Teams" and "Outlook"; the manifest symlink exists; one `FFPWA-*.desktop` per app exists.
+Expected: `profile list` shows "Microsoft Teams"; the manifest symlink exists; a `FFPWA-*.desktop` exists for Teams. (Outlook is NOT installed by activation — it is added via the extension; see Step 8b.)
 
-**Gate:** If `site install` failed (no installable manifest), apply the Task 0 fallback (`--start-url`, etc.) in `machines/_webapps-lib.nix`, re-run Steps 4–6, and only then proceed. The laptop is the proving ground before duplicating to pc.
+**Gate:** Teams install is already proven (Task 0). If it unexpectedly fails here, stop and escalate — do not proceed to pc. The laptop is the proving ground before duplicating to pc.
 
 - [ ] **Step 7: Verify idempotency**
 
@@ -230,6 +210,10 @@ Open the launcher and confirm a standalone window:
 firefoxpwa profile list   # note an installed site's ULID
 ```
 Launch its `~/.local/share/applications/FFPWA-<id>.desktop` (from the app menu or `gtk-launch`). Expected: opens in its own window, app-id `FFPWA-<id>`.
+
+- [ ] **Step 8b: Install Outlook via the extension (one-time, manual — record outcome)**
+
+In the HM-managed Firefox (extension force-installed by this module), log into `https://outlook.office.com/mail/`, open the PWAsForFirefox toolbar button, and click "Install this site as an app". Confirm `firefoxpwa profile list` then also shows "Outlook" and an `FFPWA-*.desktop` appears. This is a user action, not part of the Nix config; note in the commit/PR that Outlook is installed this way.
 
 - [ ] **Step 9: Commit**
 
@@ -344,7 +328,7 @@ sudo nixos-rebuild switch --flake .#<pc-hostname> 2>&1 | tail -30
 firefoxpwa profile list
 ls ~/.local/share/applications/FFPWA-*.desktop
 ```
-Expected: rebuild completes; `profile list` shows Teams + Outlook; launchers exist. Re-run the rebuild once more → no duplicate installs.
+Expected: rebuild completes; `profile list` shows Teams; a Teams launcher exists. Re-run the rebuild once more → no duplicate install. (Outlook is added via the extension on the pc too, same as the laptop's Step 8b.)
 
 - [ ] **Step 5: Commit**
 
@@ -385,9 +369,9 @@ git commit -m "docs(webapps): note firefoxpwa webapps module"
 - Webapp list as single source of truth → Task 1 (`_webapps-lib.nix`), consumed by Tasks 2 + 4. ✓
 - Idempotent, switch-safe activation → Task 1 (`installScript`, subshell + `|| true` + grep guard), wired in Tasks 2 + 4. ✓
 - nix-firefox runtime / no download → Global Constraints (baked, `FFPWA_SYSDATA`); no task needs to install a runtime. ✓
+- Teams declarative, Outlook via extension → Task 0 (verified), Task 1 (Teams-only list), Task 2 Step 8b (Outlook click). ✓
 - Verification (profile list, launchers, idempotency) → Task 2 Steps 6–8, Task 4 Step 4. ✓
-- Risk: manifest may need `--start-url` → Task 0 + Task 2 gate + lib note. ✓
 
-**Placeholder scan:** No TBD/TODO/"handle edge cases"; `<pc-hostname>` is an explicit lookup (from `machines/pc/vars.nix`), not a placeholder for logic. Task 0 deliberately defers the exact install flags to a confirm-by-running step, with a concrete default and a concrete fallback.
+**Placeholder scan:** No TBD/TODO/"handle edge cases"; `<pc-hostname>` is an explicit lookup (from `machines/pc/vars.nix`), not a placeholder for logic.
 
-**Type consistency:** `installScript { firefoxpwa = …; }` defined in Task 1 is called identically in Tasks 2 and 4. `webapps` is a `{name; url;}` list throughout. xpi id `firefoxpwa@filips.si` and toolkit dir id `{ec8030f7-…}` identical in Tasks 2 and 3.
+**Type consistency:** `installScript { firefoxpwa = …; }` defined in Task 1 is called identically in Tasks 2 and 4. `webapps` is a `{name; manifestUrl;}` list throughout. xpi id `firefoxpwa@filips.si` and toolkit dir id `{ec8030f7-…}` identical in Tasks 2 and 3.
