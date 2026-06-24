@@ -51,17 +51,10 @@ in
     wireplumber.enable = true;
   };
 
-  programs.firefox.enable = true;
-  programs.firefox.policies.ExtensionSettings = {
-    "uBlock0@raymondhill.net" = {
-      installation_mode = "force_installed";
-      install_url = "file://${pkgs.nur.repos.rycee.firefox-addons.ublock-origin}/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net.xpi";
-    };
-    "78272b6fa58f4a1abaac99321d503a20@proton.me" = {
-      installation_mode = "force_installed";
-      install_url = "file://${pkgs.nur.repos.rycee.firefox-addons.proton-pass}/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/78272b6fa58f4a1abaac99321d503a20@proton.me.xpi";
-    };
-  };
+  # Firefox is managed entirely by Home Manager (package + policies + profiles),
+  # mirroring the laptop. See machines/pc/profiles/theming/home.nix. Keeping it
+  # in one place avoids a system-vs-HM Firefox split where bare `firefox` on
+  # PATH could resolve to a policy-less build (no extensions).
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [

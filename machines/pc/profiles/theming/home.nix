@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   programs.firefox = {
     enable = true;
@@ -15,6 +15,19 @@
       extensions.force = true;
       settings = {
         "extensions.autoDisableScopes" = 0;
+      };
+    };
+    # Force-installed extensions. Defined here (HM) — not at the NixOS level —
+    # so the single HM-managed Firefox carries them on every profile, including
+    # the webapp profiles (Teams/Outlook). Policies apply to all profiles.
+    policies.ExtensionSettings = {
+      "uBlock0@raymondhill.net" = {
+        installation_mode = "force_installed";
+        install_url = "file://${pkgs.nur.repos.rycee.firefox-addons.ublock-origin}/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/uBlock0@raymondhill.net.xpi";
+      };
+      "78272b6fa58f4a1abaac99321d503a20@proton.me" = {
+        installation_mode = "force_installed";
+        install_url = "file://${pkgs.nur.repos.rycee.firefox-addons.proton-pass}/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}/78272b6fa58f4a1abaac99321d503a20@proton.me.xpi";
       };
     };
   };
