@@ -68,6 +68,7 @@ binds {
     Mod+Q { close-window; }
     Mod+Shift+E { quit; }
     Mod+F { maximize-column; }
+    Mod+Shift+S { fullscreen-window; }
     Mod+Shift+F { toggle-window-floating; }
 
     Mod+H { focus-column-left; }

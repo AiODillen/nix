@@ -18,6 +18,7 @@
       };
     };
   };
+  stylix.targets.waybar.enable = true;
   stylix.targets.firefox = {
     enable = true;
     profileNames = [ "default" ];
@@ -25,5 +26,9 @@
   };
   stylix.targets.mangohud.enable = true;
   stylix.targets.qt.enable = true;
+  # No KDE Plasma / KDE-framework apps here (niri session) — disable the KDE
+  # target so stylix stops pulling stylix-kde-{config,theme},
+  # plasma-apply-theme and kwindowsystem. (auto-enables by default.)
+  stylix.targets.kde.enable = false;
   stylix.targets.vesktop.enable = true;
 }

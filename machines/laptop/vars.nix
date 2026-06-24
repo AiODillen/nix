@@ -11,7 +11,7 @@
   #   gruvbox-dark-medium, catppuccin-mocha, dracula, nord, tokyo-night-dark,
   #   solarized-dark, everforest, rose-pine, onedark. Full list:
   #   https://github.com/tinted-theming/schemes/tree/spec-0.11/base16
-  scheme = "tokyo-night-dark";
+  scheme = "everforest";
   polarity = "dark"; # "dark" | "light" | "either"
   wallpaper = ./wallpaper.png;
   # Font packages are nixpkgs attribute paths (resolved against pkgs in

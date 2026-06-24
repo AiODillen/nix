@@ -8,25 +8,35 @@
         position = "top";
         height = 36;
         spacing = 4;
-        "modules-left" = [ "niri/workspaces" ];
+        "modules-left" = [
+          "niri/workspaces"
+          "custom/separator"
+          "niri/window"
+        ];
         # niri exposes only ext-foreign-toplevel-list (read-only), not the
         # wlr-foreign-toplevel-management protocol wlr/taskbar needs, so a real
         # taskbar is impossible. niri/window shows the focused window title.
-        "modules-center" = [
-          "niri/window"
-          "clock"
-        ];
+        "modules-center" = [ "clock" ];
         "modules-right" = [
           "pulseaudio"
+          "custom/separator"
           "power-profiles-daemon"
+          "custom/separator"
           "cpu"
+          "custom/separator"
           "memory"
+          "custom/separator"
           "tray"
         ];
         "niri/workspaces" = { };
         "niri/window" = {
           format = "{title}";
           max-length = 50;
+          tooltip = false;
+        };
+        "custom/separator" = {
+          format = "|";
+          interval = "once";
           tooltip = false;
         };
         power-profiles-daemon = {

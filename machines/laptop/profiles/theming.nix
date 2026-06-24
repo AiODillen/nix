@@ -42,6 +42,10 @@ in
     };
     targets.mangohud.enable = true;
     targets.qt.enable = true;
+    # No KDE Plasma / KDE-framework apps here (niri session) — disable the
+    # KDE target so stylix stops pulling stylix-kde-{config,theme},
+    # plasma-apply-theme and kwindowsystem. (auto-enables by default.)
+    targets.kde.enable = false;
     targets.vesktop.enable = true;
   };
 

@@ -37,6 +37,12 @@ window-rule {
     variable-refresh-rate true
 }
 
+// Round window corners for all windows.
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 // Audio TUI (wiremix in foot, opened from the waybar audio module): float,
 // centered, focused.
 window-rule {
@@ -55,6 +61,7 @@ binds {
     Mod+Q { close-window; }
     Mod+Shift+E { quit; }
     Mod+F { maximize-column; }
+    Mod+Shift+S { fullscreen-window; }
     Mod+Shift+F { toggle-window-floating; }
 
     Mod+H { focus-column-left; }
