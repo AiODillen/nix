@@ -14,6 +14,7 @@
     ./profiles/shell/nixos.nix
     ./profiles/theming/nixos.nix
     ./profiles/desktop/niri/nixos.nix
+    ./profiles/webapps/nixos.nix
   ];
 
   networking.hostName = vars.hostname;
