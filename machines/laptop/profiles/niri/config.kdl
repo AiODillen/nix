@@ -69,7 +69,7 @@ binds {
     Mod+Shift+E { quit; }
     Mod+F { maximize-column; }
     Mod+Shift+S { fullscreen-window; }
-    Mod+Shift+F { toggle-window-floating; }
+    Mod+V { toggle-window-floating; }
 
     Mod+H { focus-column-left; }
     Mod+L { focus-column-right; }
