@@ -9,6 +9,7 @@
     ./profiles/theming/gram.nix
     ./profiles/desktop/niri/home.nix
     ./profiles/shell/home.nix
+    ./profiles/webapps/home.nix
     ./monitors.nix
   ];
 

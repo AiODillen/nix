@@ -1,36 +1,60 @@
-# Shared definition of the headless-installable Firefox PWAs and the idempotent
-# `firefoxpwa site install` snippet, so the laptop (HM) and pc (NixOS+HM)
-# activation scripts install the same set from one source of truth.
+# Shared definition of the Firefox-backed web apps (Teams, Outlook) and the
+# Home Manager config that turns each into a site-specific "app":
 #
-# Only apps that serve an unauthenticated web-app manifest can be installed
-# this way (the positional arg is the MANIFEST URL, and firefoxpwa requires the
-# manifest origin == start_url origin). Teams qualifies. Outlook does NOT — its
-# manifest is auth-gated — so Outlook is installed via the browser extension,
-# not here.
+#   - a dedicated Firefox profile per app (own cookies/login), chromeless via
+#     userChrome (no tab strip, no nav toolbar) for an app-like window;
+#   - a .desktop launcher that runs Firefox on that profile with a distinct
+#     Wayland app-id (--class/--name = the app id), so niri sees each app as
+#     its own window (verified: `firefox --class X` => niri App ID "X").
+#
+# Extensions (uBlock, Proton Pass, …) come from the GLOBAL
+# `programs.firefox.policies.ExtensionSettings` already set on each machine —
+# policies apply to every profile, so these app profiles get them for free.
+# You log into each app once in its profile (separate session from the main
+# Firefox profile — that is the trade-off for a clean app window).
+#
+# `hmConfig { firefoxBin }` returns the HM config (profiles + desktop entries);
+# `firefoxBin` is the absolute firefox to exec (defaults to PATH `firefox`).
 { lib }:
 let
   webapps = [
-    { name = "Microsoft Teams"; manifestUrl = "https://teams.microsoft.com/manifest.json"; }
+    { id = "teams"; name = "Microsoft Teams"; url = "https://teams.microsoft.com/"; profileId = 1; }
+    { id = "outlook"; name = "Outlook"; url = "https://outlook.office.com/mail/"; profileId = 2; }
   ];
 
-  # Render one idempotent install line per webapp. `firefoxpwa profile list`
-  # prints each installed app as `- <name>: <url> (<ULID>)`; skip install when
-  # the name is already present. Names are fixed strings here, so grep -F is safe.
-  installLine = ffpwa: app: ''
-    "${ffpwa}/bin/firefoxpwa" profile list 2>/dev/null | grep -qF ${lib.escapeShellArg app.name} \
-      || "${ffpwa}/bin/firefoxpwa" site install ${lib.escapeShellArg app.manifestUrl} --name ${lib.escapeShellArg app.name}
+  # Hide the tab strip and the navigation toolbar for the app feel. Requires
+  # the legacy stylesheet pref (set per-profile below).
+  userChrome = ''
+    #TabsToolbar { visibility: collapse !important; }
+    #nav-bar { visibility: collapse !important; }
   '';
 
-  # Whole block in a subshell + `|| true`: HM concatenates all activation
-  # blocks into ONE bash script, so a bare failure here could abort the entire
-  # switch. The guard makes a network error / refused install a no-op that
-  # retries on the next switch instead of breaking activation.
-  installScript = { firefoxpwa }: ''
-    (
-    ${lib.concatMapStrings (installLine firefoxpwa) webapps}
-    ) || true
-  '';
+  mkProfile = app: lib.nameValuePair app.id {
+    id = app.profileId;
+    isDefault = false;
+    settings = {
+      "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+    };
+    userChrome = userChrome;
+  };
+
+  mkDesktop = firefoxBin: app: lib.nameValuePair "webapp-${app.id}" {
+    name = app.name;
+    genericName = "Web App";
+    # --no-remote forces a separate instance on this app's profile (not a new
+    # window in the main Firefox); --class/--name set the Wayland app-id.
+    exec = "${firefoxBin} -P ${app.id} --class ${app.id} --name ${app.id} --no-remote ${app.url}";
+    terminal = false;
+    startupNotify = true;
+    settings.StartupWMClass = app.id;
+    categories = [ "Network" ];
+  };
+
+  hmConfig = { firefoxBin ? "firefox" }: {
+    programs.firefox.profiles = lib.listToAttrs (map mkProfile webapps);
+    xdg.desktopEntries = lib.listToAttrs (map (mkDesktop firefoxBin) webapps);
+  };
 in
 {
-  inherit webapps installScript;
+  inherit webapps userChrome hmConfig;
 }
