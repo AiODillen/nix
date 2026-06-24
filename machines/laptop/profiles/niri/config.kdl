@@ -68,8 +68,9 @@ binds {
     Mod+Q { close-window; }
     Mod+Shift+E { quit; }
     Mod+F { maximize-column; }
-    Mod+Shift+S { fullscreen-window; }
+    Mod+Shift+F { fullscreen-window; }
     Mod+V { toggle-window-floating; }
+    Mod+Escape { spawn "loginctl" "lock-session"; }
 
     Mod+H { focus-column-left; }
     Mod+L { focus-column-right; }
