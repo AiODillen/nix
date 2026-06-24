@@ -95,6 +95,7 @@ in
     nautilus
     gnome-disk-utility
     pavucontrol
+    swayidle # idle/sleep manager — runs swaylock on before-sleep (lid close)
   ];
 
   xdg.configFile."niri/config.kdl".text = renderedKdl;
@@ -142,6 +143,30 @@ in
     };
   };
 
+  # Lock on lid close: Mint logind suspends on lid close (its default); this
+  # swayidle service holds a sleep inhibitor and runs swaylock on before-sleep,
+  # so the lock surface is up before suspend completes. The `lock` event covers
+  # `loginctl lock-session` and the manual keybind. -w waits for swaylock to
+  # fork before releasing the inhibitor (critical — else a brief unlocked
+  # window on resume). Wired to graphical-session.target so it inherits
+  # WAYLAND_DISPLAY (niri --session imports the env into the user manager).
+  systemd.user.services.swayidle = {
+    Unit = {
+      Description = "Idle manager — lock screen before sleep (lid close)";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = ''
+        ${pkgs.swayidle}/bin/swayidle -w \
+          lock '${pkgs.swaylock}/bin/swaylock -f' \
+          before-sleep '${pkgs.swaylock}/bin/swaylock -f'
+      '';
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
   # Screen sharing on niri: the portal backends are apt-provided on this Mint
   # host (xdg-desktop-portal{,-gnome,-gtk} + pipewire, all already running).
   # niri's session sets XDG_CURRENT_DESKTOP=niri, so the portal frontend reads
@@ -158,6 +183,12 @@ in
   xdg.configFile."wiremix/wiremix.toml".text = wiremixToml;
 
   # Wayland daemons (stylix themes these via its default targets).
+  # Screen locker. Config written to ~/.config/swaylock/config; swaylock reads
+  # it however launched (swayidle service or manual keybind). No nixGL wrapper:
+  # swaylock is a Wayland shm+cairo client and the swayidle service runs in the
+  # clean HM user env, not niri's LD_LIBRARY_PATH-polluted one.
+  programs.swaylock.enable = true;
+
   programs.foot.enable = true;
   programs.fuzzel.enable = true;
   services.mako.enable = true;

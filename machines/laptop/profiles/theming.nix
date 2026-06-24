@@ -46,6 +46,7 @@ in
     # KDE target so stylix stops pulling stylix-kde-{config,theme},
     # plasma-apply-theme and kwindowsystem. (auto-enables by default.)
     targets.kde.enable = false;
+    targets.swaylock.enable = true;
     targets.vesktop.enable = true;
   };
 
