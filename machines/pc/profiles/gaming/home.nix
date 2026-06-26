@@ -1,14 +1,12 @@
-# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
-# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
-# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
+# Gaming home profile. Imported only when vars.modules.gaming = true (gated in
+# machines/pc/home.nix), so no enable guard here.
 {
-  lib,
-  osConfig,
   pkgs,
+  vars,
   ...
 }:
 let
-  res = osConfig.mySystem.gaming.gamescope;
+  res = vars.gamescope;
   # The gamescope security wrapper (capSysNice=true) injects cap_sys_nice into
   # the inheritable set. bwrap 0.11+ rejects any non-zero capability sets.
   # Fix: pass capsh as the "steam" command after gamescope's --, so caps are
@@ -30,7 +28,7 @@ let
         "exec steam -tenfoot -pipewire-dmabuf"
   '';
 in
-lib.mkIf osConfig.mySystem.gaming.enable {
+{
   programs.mangohud.enable = true;
   programs.vesktop.enable = true;
 

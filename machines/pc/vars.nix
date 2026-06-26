@@ -1,10 +1,29 @@
 # Main PC (NixOS) — all config values for this machine. Plain attrset, imported
 # by flake.nix and threaded to system + home modules as `vars`.
 {
+  # IMPORTANT: `user` must match the account you create during NixOS install.
+  # NixOS declares the user from this name — a matching name *adopts* (manages)
+  # the existing account, it does not create a second one. A different name here
+  # would create an extra user. `hostname` is likewise declared, not read from
+  # the running system (pure eval can't read the live host). Edit both per machine.
   hostname = "nixos";
   user = "dillen";
   fullName = "dillen";
   extraGroups = [ "networkmanager" "wheel" ];
+
+  # ── Module toggles ─────────────────────────────────────────────────────────
+  # Enable/disable optional profiles. `core` + `shell` are always on (base).
+  # Each true flag imports that profile's nixos.nix/home.nix halves in
+  # default.nix + home.nix. Flip a flag and rebuild — no other edits needed.
+  modules = {
+    theming = true;  # stylix theming + firefox theming (themes most apps)
+    desktop = true;  # niri wayland session (greetd, portals, waybar, monitors)
+    webapps = true;  # firefox PWAs (needs `theming` for firefox)
+    gaming = false;  # steam + gamescope + mangohud + amdgpu tooling
+    ai = false;      # claude-code, rtk, codegraph, plugin install scripts
+    localAi = false; # ollama + open-webui (ROCm) — see `rocmGfx` below
+    storage = false; # automounts from `storageMounts` below
+  };
 
   # ── Theme ────────────────────────────────────────────────────────────────
   # scheme: any base16 scheme name from the base16-schemes package (the file

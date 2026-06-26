@@ -1,13 +1,11 @@
-# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
-# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
-# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
-{ lib, osConfig, ... }:
+# AI home profile (Claude Code config files). Imported only when
+# vars.modules.ai = true (gated in machines/pc/home.nix), no guard here.
+{ ... }:
 {
   imports = [ ./claude-plugins.nix ];
 
-  config = lib.mkIf osConfig.mySystem.ai.enable {
-    # User instructions loaded by Claude Code on every session
-    home.file.".claude/CLAUDE.md".text = ''
+  # User instructions loaded by Claude Code on every session
+  home.file.".claude/CLAUDE.md".text = ''
       # AI Tooling
 
       ## Code Intelligence (codegraph)
@@ -88,5 +86,5 @@
         ];
       };
     };
-  };
 }
+

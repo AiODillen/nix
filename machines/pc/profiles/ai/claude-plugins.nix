@@ -1,7 +1,6 @@
-# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
-# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
-# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
-{ lib, osConfig, pkgs, ... }:
+# Claude Code plugin/npm-tool install scripts. Imported by ai/home.nix, which is
+# only imported when vars.modules.ai = true — so no enable guard here.
+{ lib, pkgs, ... }:
 let
   cavemanVersion = "25d22f864ad6";
   cavemanRev = "25d22f864ad68cc447a4cb93aefde918aa4aec9f";
@@ -33,7 +32,7 @@ let
   # what they say.
   frozenTs = "1970-01-01T00:00:00.000Z";
 in
-lib.mkIf osConfig.mySystem.ai.enable {
+{
   home.sessionPath = [ "$HOME/.npm-global/bin" ];
 
   # codegraph + repomix installed to user-local npm prefix (nix store is read-only).

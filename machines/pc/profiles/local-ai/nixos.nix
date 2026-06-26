@@ -1,19 +1,15 @@
-# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
-# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
-# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
-{ config, lib, pkgs, ... }:
-let
-  cfg = config.mySystem;
-in
-lib.mkIf cfg.localAi.enable {
+# ROCm Ollama + open-webui. Imported only when vars.modules.localAi = true
+# (gated in machines/pc/default.nix), so no enable guard here.
+{ pkgs, vars, ... }:
+{
   hardware.graphics.extraPackages = [ pkgs.rocmPackages.clr ];
 
-  users.users.${cfg.user.name}.extraGroups = [ "render" "video" ];
+  users.users.${vars.user}.extraGroups = [ "render" "video" ];
 
   services.ollama = {
     enable = true;
     package = pkgs.ollama-rocm;
-    rocmOverrideGfx = cfg.localAi.rocmGfx;
+    rocmOverrideGfx = vars.rocmGfx;
     host = "127.0.0.1";
     port = 11434;
   };

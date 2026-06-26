@@ -1,8 +1,7 @@
-# UNIMPORTED: still uses the old mySystem schema. Not imported by this machine
-# (feature off). Convert config.mySystem / osConfig.mySystem refs to `vars` before
-# re-importing — vars.nix already carries gamescope / rocmGfx / storageMounts.
-{ config, lib, pkgs, ... }:
-lib.mkIf config.mySystem.gaming.enable {
+# Steam + gamescope + amdgpu tooling. Imported only when vars.modules.gaming =
+# true (gated in machines/pc/default.nix), so no enable guard here.
+{ lib, pkgs, vars, ... }:
+{
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
@@ -13,7 +12,7 @@ lib.mkIf config.mySystem.gaming.enable {
     enable = true;
     capSysNice = true;
     env = {
-      XKB_DEFAULT_LAYOUT = config.mySystem.locale.xkbLayout;
+      XKB_DEFAULT_LAYOUT = vars.xkbLayout;
     };
   };
 

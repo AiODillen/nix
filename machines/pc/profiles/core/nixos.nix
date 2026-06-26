@@ -33,7 +33,11 @@ in
 
   console.keyMap = vars.consoleKeymap;
 
-  # Primary user account (folded in from the old users/nixos.nix).
+  # Primary user account. vars.user must match the account you create at NixOS
+  # install — a matching name adopts/manages it, it does not create a second
+  # user. No password is set here and mutableUsers stays true, so the password
+  # you set at install (or later via `passwd`) persists across rebuilds.
+  users.mutableUsers = true;
   users.users.${vars.user} = {
     isNormalUser = true;
     description = vars.fullName;
