@@ -1,8 +1,19 @@
-# Firefox web apps (Teams, Outlook) on the laptop. Each is a dedicated Firefox
-# profile + chromeless window + distinct niri app-id; see machines/_webapps-lib.nix.
-# Extensions come from the global policies in profiles/theming.nix (apply to all
-# profiles). Firefox here is the HM-managed package (finalPackage).
-{ config, lib, ... }:
-(import ../../_webapps-lib.nix { inherit lib; }).hmConfig {
-  firefoxBin = "${config.programs.firefox.finalPackage}/bin/firefox";
+# Chromium web apps (Teams, Outlook) on the laptop. Each is an app-mode
+# Chromium window sharing the default profile + Proton Pass; see
+# machines/_webapps-lib.nix.
+#
+# Proton Pass is installed via HM's External Extensions mechanism
+# (creates ~/.config/chromium/External Extensions/<id>.json) — this is the
+# only user-level extension install that standard Chromium respects on Linux.
+{ config, pkgs, lib, ... }:
+{
+  programs.chromium = {
+    enable = true;
+    extensions = [
+      { id = "ghmbeldphafepmbegfdlkpapadhbakde"; }   # Proton Pass
+    ];
+  };
+}
+// (import ../../_webapps-lib.nix { inherit lib; }).hmConfig {
+  chromiumBin = "${config.programs.chromium.package}/bin/chromium";
 }

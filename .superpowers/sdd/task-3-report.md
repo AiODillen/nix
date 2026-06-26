@@ -1,66 +1,28 @@
-# Task 3 Report: Delete dead tree + rewrite docs
+# Task 3 Report: pc NixOS wiring for firefoxpwa
 
 ## Status: DONE
 
-## Deletions
+## Files
 
-Removed the entire shared tree via `git rm -r`:
-- `profiles/` (all shared feature profiles)
-- `settings.nix` (shared mySystem settings)
-- `modules/` (options.nix schema + home/monitors.nix shared module)
-- `users/` (nixos.nix + home.nix user glue)
-- `template/` (standalone HM base: home.nix, profiles/)
-- `wallpaper.png` (root; each machine has its own copy)
+- **Created**: `machines/pc/profiles/webapps/nixos.nix` — NixOS module adding `firefoxpwa` to systemPackages, registering it as a native-messaging host, and force-installing the PWAsForFirefox extension via `programs.firefox.policies.ExtensionSettings`.
+- **Modified**: `machines/pc/default.nix` — added `./profiles/webapps/nixos.nix` to the imports list.
 
-Note: `template/README.md` was not `git mv`'d because `machines/laptop/README.md` already existed with its own content (from Task 1). The template copy was deleted with the rest of `template/`.
+## Eval-build
 
-## Comment fixes
-
-1. `machines/pc/profiles/theming/home.nix` line 12: `./firefox-profile.nix` -> `../../firefox-profile.nix`
-2. `machines/laptop/profiles/theming.nix` line 61: `../../modules/home/firefox-profile.nix` -> `../firefox-profile.nix` (stale path to deleted modules/ dir, caught by verification grep)
-
-## README rewrites
-
-### `machines/laptop/README.md`
-- Replaced "thin overlay importing ../../template" framing with self-contained machine description
-- Removed references to `../../settings.nix`, `device.nix`, `modules/home/monitors.nix`, `mySystem` toggles
-- Updated to `vars.nix` references; stated "no toggles — profile runs iff imported"
-- Added post-install notes (locale, nixGL, niri session, Steam) from template/README.md
-- Added updating section pointing at `machines/laptop/profiles/ai.nix`
-
-### `README.md` (root)
-- Replaced "shared settings vs per-device" model with two-independent-machines model
-- Documented both build commands
-- Updated repo layout to show only `machines/pc/` and `machines/laptop/`
-- Removed `mySystem` options reference table, `settings.nix` references, `modules/`, `users/`, `template/`, `profiles/` from layout
-- Simplified common-changes section (no more `mySystem.*` paths — edit `vars.nix`)
-
-## Verification
-
-### Build evaluation (all exit 0)
-
-```
-$ nix flake check
-all checks passed!
-
-$ nix build .#nixosConfigurations.nixos.config.system.build.toplevel --dry-run
-(exit 0, only "Git tree is dirty" warning)
-
-$ nix build .#homeConfigurations.niklas.activationPackage --dry-run
-(exit 0, only "Git tree is dirty" warning)
+Command:
+```bash
+. ~/.nix-profile/etc/profile.d/nix.sh 2>/dev/null; nix build --no-link '.#nixosConfigurations.nixos.config.system.build.toplevel' 2>&1 | tail -30
 ```
 
-### Stale-reference grep
+Result: **Success**. Build completed with no evaluation errors. The new `ExtensionSettings."firefoxpwa@filips.si"` key deep-merged cleanly with the existing extension policies in `machines/pc/profiles/core/nixos.nix`. Final derivation built: `nixos-system-nixos-26.05.20260611.a037402`.
 
-```
-grep -rn -e "\.\./\.\./profiles" -e "settings.nix" -e "modules/home" -e "modules/options" -e "/template/" -e "mySystem" --include="*.nix" .
-```
+Tail output showed normal build activity: fetching `firefox-151.0.4`, building `firefoxpwa-2.18.2_fish-completions`, `firefox-policies.json`, `activation-script`, home-manager generation, system units, etc. No errors or warnings (beyond the expected "Git tree is dirty" from flakes).
 
-Matches (all expected):
-- **Laptop comments (prose, not code):** monitors.nix:3, shell.nix:7, _monitors-lib.nix:6 — mention "mySystem" in explanatory comments, not as code references
-- **Unimported PC profiles (by design):** gaming/{nixos,home}.nix, ai/{nixos,home,claude-plugins}.nix, storage/nixos.nix, local-ai/nixos.nix — contain `config.mySystem`/`osConfig.mySystem` code references; these profiles are intentionally kept but not imported
-- **Zero matches in:** flake.nix, machines/pc/{default.nix,home.nix,monitors.nix}, machines/pc/profiles/{core,shell,theming,desktop/niri}/*, machines/laptop/* (imported files)
+## Commit
+
+- **Hash**: `be04fa7`
+- **Message**: `feat(webapps): pc NixOS wiring for firefoxpwa (connector + extension)`
 
 ## Concerns
 
-None.
+None. The extension policy merges without conflict, firefoxpwa is available in nixpkgs, and the NUR addon path matches the pattern used by the laptop module.

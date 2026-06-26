@@ -46,7 +46,9 @@ in
     # KDE target so stylix stops pulling stylix-kde-{config,theme},
     # plasma-apply-theme and kwindowsystem. (auto-enables by default.)
     targets.kde.enable = false;
-    targets.swaylock.enable = true;
+    # No targets.swaylock: we use the apt swaylock and hand-theme its config in
+    # niri.nix (the stylix target needs programs.swaylock, which installs the
+    # broken nix build).
     targets.vesktop.enable = true;
   };
 

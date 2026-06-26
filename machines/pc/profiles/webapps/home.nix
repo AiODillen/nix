@@ -1,9 +1,19 @@
-# Firefox web apps (Teams, Outlook) on the pc. Dedicated Firefox profile +
-# chromeless window + distinct niri app-id per app; see machines/_webapps-lib.nix.
-# Firefox is HM-managed (package + policies + profiles), same as the laptop, so
-# exec the HM finalPackage — it carries the extension policies, so the app
-# windows get uBlock / Proton Pass like every other profile.
-{ config, lib, ... }:
-(import ../../../_webapps-lib.nix { inherit lib; }).hmConfig {
-  firefoxBin = "${config.programs.firefox.finalPackage}/bin/firefox";
+# Chromium web apps (Teams, Outlook) on the pc. Each is an app-mode Chromium
+# window sharing the default profile + Proton Pass; see
+# machines/_webapps-lib.nix.
+#
+# Proton Pass is installed via HM's External Extensions mechanism
+# (creates ~/.config/chromium/External Extensions/<id>.json) — this is the
+# only user-level extension install that standard Chromium respects on Linux.
+{ config, pkgs, lib, ... }:
+{
+  programs.chromium = {
+    enable = true;
+    extensions = [
+      { id = "ghmbeldphafepmbegfdlkpapadhbakde"; }   # Proton Pass
+    ];
+  };
+}
+// (import ../../../_webapps-lib.nix { inherit lib; }).hmConfig {
+  chromiumBin = "${config.programs.chromium.package}/bin/chromium";
 }

@@ -52,6 +52,35 @@ let
     help_more = { fg = "${c.base04}" }
   '';
 
+  # swaylock config (key=value, colors as bare RRGGBB). base16-themed to match
+  # stylix; consumed by the apt swaylock via ~/.config/swaylock/config.
+  swaylockConfig = ''
+    color=${colors.base00}
+    inside-color=${colors.base00}
+    inside-clear-color=${colors.base00}
+    inside-caps-lock-color=${colors.base00}
+    inside-ver-color=${colors.base00}
+    inside-wrong-color=${colors.base00}
+    line-uses-inside
+    ring-color=${colors.base01}
+    ring-clear-color=${colors.base08}
+    ring-caps-lock-color=${colors.base01}
+    ring-ver-color=${colors.base0B}
+    ring-wrong-color=${colors.base08}
+    key-hl-color=${colors.base0B}
+    layout-bg-color=${colors.base00}
+    layout-border-color=${colors.base01}
+    layout-text-color=${colors.base05}
+    text-color=${colors.base05}
+    text-clear-color=${colors.base05}
+    text-caps-lock-color=${colors.base05}
+    text-ver-color=${colors.base05}
+    text-wrong-color=${colors.base05}
+    separator-color=00000000
+    image=${config.stylix.image}
+    scaling=fill
+  '';
+
   # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with gpu.nix.
   # Non-NixOS has no /run/opengl-driver, so nix GPU apps can't find the system
   # driver; these wrap a program with the right libs.
@@ -150,6 +179,10 @@ in
   # fork before releasing the inhibitor (critical — else a brief unlocked
   # window on resume). Wired to graphical-session.target so it inherits
   # WAYLAND_DISPLAY (niri --session imports the env into the user manager).
+  # swaylock is the apt build at /usr/bin/swaylock (the nix swaylock fails to
+  # render on this non-NixOS host); absolute path because ~/.nix-profile/bin
+  # precedes /usr/bin on the user-manager PATH. Themed via the hand-rolled
+  # ~/.config/swaylock/config below.
   systemd.user.services.swayidle = {
     Unit = {
       Description = "Idle manager — lock screen before sleep (lid close)";
@@ -160,8 +193,8 @@ in
       Type = "simple";
       ExecStart = ''
         ${pkgs.swayidle}/bin/swayidle -w \
-          lock '${pkgs.swaylock}/bin/swaylock -f' \
-          before-sleep '${pkgs.swaylock}/bin/swaylock -f'
+          lock '/usr/bin/swaylock -f' \
+          before-sleep '/usr/bin/swaylock -f'
       '';
     };
     Install.WantedBy = [ "graphical-session.target" ];
@@ -182,13 +215,13 @@ in
 
   xdg.configFile."wiremix/wiremix.toml".text = wiremixToml;
 
-  # Wayland daemons (stylix themes these via its default targets).
-  # Screen locker. Config written to ~/.config/swaylock/config; swaylock reads
-  # it however launched (swayidle service or manual keybind). No nixGL wrapper:
-  # swaylock is a Wayland shm+cairo client and the swayidle service runs in the
-  # clean HM user env, not niri's LD_LIBRARY_PATH-polluted one.
-  programs.swaylock.enable = true;
+  # swaylock config for the apt swaylock (no programs.swaylock — that would
+  # reinstall the broken nix build). Hand-themed from stylix base16, mirroring
+  # what the stylix swaylock target generated: base00 inside/bg, base01 ring,
+  # base05 text, base0B (green) ok/highlight, base08 (red) wrong/clear.
+  xdg.configFile."swaylock/config".text = swaylockConfig;
 
+  # Wayland daemons (stylix themes these via its default targets).
   programs.foot.enable = true;
   programs.fuzzel.enable = true;
   services.mako.enable = true;

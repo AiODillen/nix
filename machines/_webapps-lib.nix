@@ -1,60 +1,40 @@
-# Shared definition of the Firefox-backed web apps (Teams, Outlook) and the
+# Shared definition of the Chromium-backed web apps (Teams, Outlook) and the
 # Home Manager config that turns each into a site-specific "app":
 #
-#   - a dedicated Firefox profile per app (own cookies/login), chromeless via
-#     userChrome (no tab strip, no nav toolbar) for an app-like window;
-#   - a .desktop launcher that runs Firefox on that profile with a distinct
-#     Wayland app-id (--class/--name = the app id), so niri sees each app as
-#     its own window (verified: `firefox --class X` => niri App ID "X").
+#   - Chromium launches each app in app mode (`--app=<url>`) which removes all
+#     browser chrome (tab strip, nav bar, address bar) for a native window.
+#     All webapps share the default Chromium profile so they see the same
+#     extensions (Proton Pass) and cookies.
+#   - A .desktop launcher per app with a distinct Wayland app-id
+#     (--class/--name = the app id), so niri sees each as its own window.
 #
-# Extensions (uBlock, Proton Pass, …) come from the GLOBAL
-# `programs.firefox.policies.ExtensionSettings` already set on each machine —
-# policies apply to every profile, so these app profiles get them for free.
-# You log into each app once in its profile (separate session from the main
-# Firefox profile — that is the trade-off for a clean app window).
+# Proton Pass is installed via the consumer's `programs.chromium.extensions`
+# (External Extensions mechanism), **not** via policies — Chromium does not
+# read user-level policies on Linux (only /etc/chromium/policies/managed/).
 #
-# `hmConfig { firefoxBin }` returns the HM config (profiles + desktop entries);
-# `firefoxBin` is the absolute firefox to exec (defaults to PATH `firefox`).
+# `hmConfig { chromiumBin }` returns the HM config (desktop entries);
+# `chromiumBin` defaults to PATH `chromium`.
 { lib }:
 let
   webapps = [
-    { id = "teams"; name = "Microsoft Teams"; url = "https://teams.microsoft.com/"; profileId = 1; }
-    { id = "outlook"; name = "Outlook"; url = "https://outlook.office.com/mail/"; profileId = 2; }
+    { id = "teams"; name = "Microsoft Teams"; url = "https://teams.microsoft.com/"; }
+    { id = "outlook"; name = "Outlook"; url = "https://outlook.office.com/mail/"; }
   ];
 
-  # Hide the tab strip and the navigation toolbar for the app feel. Requires
-  # the legacy stylesheet pref (set per-profile below).
-  userChrome = ''
-    #TabsToolbar { visibility: collapse !important; }
-    #nav-bar { visibility: collapse !important; }
-  '';
-
-  mkProfile = app: lib.nameValuePair app.id {
-    id = app.profileId;
-    isDefault = false;
-    settings = {
-      "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
-    };
-    userChrome = userChrome;
-  };
-
-  mkDesktop = firefoxBin: app: lib.nameValuePair "webapp-${app.id}" {
+  mkDesktop = chromiumBin: app: lib.nameValuePair "webapp-${app.id}" {
     name = app.name;
     genericName = "Web App";
-    # --no-remote forces a separate instance on this app's profile (not a new
-    # window in the main Firefox); --class/--name set the Wayland app-id.
-    exec = "${firefoxBin} -P ${app.id} --class ${app.id} --name ${app.id} --no-remote ${app.url}";
+    exec = "${chromiumBin} --app=${app.url} --class=${app.id} --name=${app.id}";
     terminal = false;
     startupNotify = true;
     settings.StartupWMClass = app.id;
     categories = [ "Network" ];
   };
 
-  hmConfig = { firefoxBin ? "firefox" }: {
-    programs.firefox.profiles = lib.listToAttrs (map mkProfile webapps);
-    xdg.desktopEntries = lib.listToAttrs (map (mkDesktop firefoxBin) webapps);
+  hmConfig = { chromiumBin ? "chromium" }: {
+    xdg.desktopEntries = lib.listToAttrs (map (mkDesktop chromiumBin) webapps);
   };
 in
 {
-  inherit webapps userChrome hmConfig;
+  inherit webapps hmConfig;
 }
