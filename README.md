@@ -12,6 +12,21 @@ its profile is imported in that machine's entry file.
 
 ---
 
+## First-time install
+
+```sh
+./install.sh                # pick a machine from a menu, confirm, install
+./install.sh nixos          # or name it directly (skips the menu)
+./install.sh -y niklas      # ...and skip the confirmation prompt
+```
+
+`install.sh` is pure bash with no runtime deps beyond `nix`. It discovers the
+machines from `flake.nix`, shows an arrow-key menu, enables the required
+experimental features (`nix-command`, `flakes`) for every nix call it makes, and
+runs the right activation: `nixos-rebuild switch` for NixOS hosts, or
+`home-manager switch` for standalone Home Manager users (bootstrapping the HM
+CLI via `nix run` when it isn't installed yet).
+
 ## Build commands
 
 ```sh
