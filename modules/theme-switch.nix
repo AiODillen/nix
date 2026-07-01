@@ -4,18 +4,23 @@ let
   activation =
     if mode == "hm" then ''
       gens="$(home-manager generations)"
-      gen="$(printf '%s\n' "$gens" | head -n1 | grep -oE '/nix/store/[^ ]+')"
-      [ -n "$gen" ] || { echo "theme-switch: no home-manager generation found" >&2; exit 1; }
+      base=""
+      while read -r line; do
+        g="$(printf '%s' "$line" | grep -oE '/nix/store/[^ ]+' || true)"
+        [ -n "$g" ] || continue
+        if [ -n "$(ls -A "$g/specialisation" 2>/dev/null)" ]; then base="$g"; break; fi
+      done <<< "$gens"
+      [ -n "$base" ] || { echo "theme-switch: no base home-manager generation found" >&2; exit 1; }
       if [ "$choice" = default ]; then
-        "$gen/activate"
+        "$base/activate"
       else
-        "$gen/specialisation/$choice/activate"
+        "$base/specialisation/$choice/activate"
       fi
     '' else ''
       if [ "$choice" = default ]; then
-        sudo /run/current-system/bin/switch-to-configuration switch
+        sudo /run/current-system/bin/switch-to-configuration test
       else
-        sudo "/run/current-system/specialisation/$choice/bin/switch-to-configuration" switch
+        sudo "/run/current-system/specialisation/$choice/bin/switch-to-configuration" test
       fi
     '';
 in
