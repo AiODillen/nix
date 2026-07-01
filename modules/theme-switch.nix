@@ -18,9 +18,9 @@ let
       fi
     '' else ''
       if [ "$choice" = default ]; then
-        sudo /run/current-system/bin/switch-to-configuration test
+        sudo /nix/var/nix/profiles/system/bin/switch-to-configuration test
       else
-        sudo "/run/current-system/specialisation/$choice/bin/switch-to-configuration" test
+        sudo "/nix/var/nix/profiles/system/specialisation/$choice/bin/switch-to-configuration" test
       fi
     '';
 in

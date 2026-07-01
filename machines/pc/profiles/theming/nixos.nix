@@ -45,12 +45,14 @@ in
   # Passwordless activation for theme-switch, scoped to switch-to-configuration
   # test only. Lets the picker activate a prebuilt specialisation without a
   # password; it cannot change what those configs contain without a (privileged)
-  # rebuild. Using "test" (not "switch") avoids repointing /run/current-system.
+  # rebuild. Using "test" (not "switch") keeps the system profile
+  # /nix/var/nix/profiles/system stable (updated only on switch/boot), which
+  # is the anchor used here so the specialisation tree is always populated.
   security.sudo.extraRules = [{
     users = [ vars.user ];
     commands = [
-      { command = "/run/current-system/bin/switch-to-configuration test"; options = [ "NOPASSWD" ]; }
-      { command = "/run/current-system/specialisation/*/bin/switch-to-configuration test"; options = [ "NOPASSWD" ]; }
+      { command = "/nix/var/nix/profiles/system/bin/switch-to-configuration test"; options = [ "NOPASSWD" ]; }
+      { command = "/nix/var/nix/profiles/system/specialisation/*/bin/switch-to-configuration test"; options = [ "NOPASSWD" ]; }
     ];
   }];
 
