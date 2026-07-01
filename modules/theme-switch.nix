@@ -5,6 +5,7 @@ let
     if mode == "hm" then ''
       gens="$(home-manager generations)"
       gen="$(printf '%s\n' "$gens" | head -n1 | grep -oE '/nix/store/[^ ]+')"
+      [ -n "$gen" ] || { echo "theme-switch: no home-manager generation found" >&2; exit 1; }
       if [ "$choice" = default ]; then
         "$gen/activate"
       else
@@ -34,7 +35,7 @@ pkgs.writeShellApplication {
           done \
         | fuzzel --dmenu --prompt 'theme> ' \
         | awk '{print $1}'
-    )"
+    )" || true
     [ -z "$choice" ] && exit 0
 
     ${activation}
