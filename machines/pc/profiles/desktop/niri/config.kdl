@@ -63,6 +63,13 @@ binds {
     Mod+F { maximize-column; }
     Mod+Shift+S { fullscreen-window; }
     Mod+Shift+F { toggle-window-floating; }
+    Mod+Shift+T { spawn "theme-switch"; }
+
+    // Screenshots (niri built-in: saves to ~/Pictures/Screenshots + clipboard).
+    // Print: interactive area/output select. Ctrl: whole screen. Alt: focused window.
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
 
     Mod+H { focus-column-left; }
     Mod+L { focus-column-right; }

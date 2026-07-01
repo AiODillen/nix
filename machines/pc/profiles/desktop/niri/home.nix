@@ -1,6 +1,11 @@
 { lib, pkgs, config, vars, ... }:
 let
   colors = config.lib.stylix.colors;
+  themeSwitch = import ../../../../../modules/theme-switch.nix {
+    inherit pkgs lib;
+    themeMenu = import ../../../../../modules/theme-menu.nix;
+    mode = "nixos";
+  };
   c = colors.withHashtag; # base00..base0F as "#rrggbb"
   renderedKdl = lib.replaceStrings
     [ "@XKB_LAYOUT@" "@XKB_VARIANT@" "@BORDER_ACTIVE@" "@BORDER_INACTIVE@" ]
@@ -52,7 +57,10 @@ in
 
   programs.foot.enable = true;
   programs.fuzzel.enable = true;
-  home.packages = [ pkgs.wiremix ]; # pipewire TUI mixer (waybar audio module)
+  home.packages = [
+    pkgs.wiremix # pipewire TUI mixer (waybar audio module)
+    themeSwitch # `theme-switch` — fuzzel theme picker (Mod+Shift+T)
+  ];
   services.mako.enable = true;
   # Merges with stylix's color settings. Rounded corners + auto-dismiss.
   services.mako.settings = {

@@ -81,6 +81,12 @@ let
     scaling=fill
   '';
 
+  themeSwitch = import ../../../modules/theme-switch.nix {
+    inherit pkgs lib;
+    themeMenu = import ../../../modules/theme-menu.nix;
+    mode = "hm";
+  };
+
   # GPU-vendor-aware nixGL wrappers (Mesa vs NVIDIA), shared with gpu.nix.
   # Non-NixOS has no /run/opengl-driver, so nix GPU apps can't find the system
   # driver; these wrap a program with the right libs.
@@ -125,6 +131,7 @@ in
     gnome-disk-utility
     pavucontrol
     swayidle # idle/sleep manager — runs swaylock on before-sleep (lid close)
+    themeSwitch # `theme-switch` — fuzzel theme picker (Mod+Shift+T)
   ];
 
   xdg.configFile."niri/config.kdl".text = renderedKdl;
