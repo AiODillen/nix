@@ -2,6 +2,7 @@
 let
   # Resolve a "foo.bar" nixpkgs attr path (from vars.fonts) to the package.
   font = f: { package = lib.getAttrFromPath (lib.splitString "." f.package) pkgs; inherit (f) name; };
+  themeMenu = import ../../../../modules/theme-menu.nix;
 in
 {
   # Disable kmscon entirely to avoid conflicts with Stylix in nixpkgs 26.05.
@@ -28,6 +29,29 @@ in
     # This machine runs niri, not gnome.
     targets.gnome.enable = false;
   };
+
+  # Prebuilt theme variants for the on-the-fly switcher (theme-switch / Mod+Shift+T).
+  # NixOS specialisations inherit the parent config (inheritParentConfig defaults
+  # true) and rebuild HM too, so coverage is full. Runtime-only: reverts to
+  # vars.scheme on the next nixos-rebuild switch.
+  specialisation = lib.listToAttrs (map (t: {
+    inherit (t) name;
+    value.configuration.stylix = {
+      base16Scheme = lib.mkForce "${pkgs.base16-schemes}/share/themes/${t.name}.yaml";
+      polarity = lib.mkForce t.polarity;
+    };
+  }) themeMenu);
+
+  # Passwordless activation for theme-switch, scoped to switch-to-configuration
+  # only. Lets the picker activate a prebuilt specialisation without a password;
+  # it cannot change what those configs contain without a (privileged) rebuild.
+  security.sudo.extraRules = [{
+    users = [ vars.user ];
+    commands = [
+      { command = "/run/current-system/bin/switch-to-configuration switch"; options = [ "NOPASSWD" ]; }
+      { command = "/run/current-system/specialisation/*/bin/switch-to-configuration switch"; options = [ "NOPASSWD" ]; }
+    ];
+  }];
 
   programs.firefox.policies.ExtensionSettings = {
     "FirefoxColor@mozilla.com" = {
