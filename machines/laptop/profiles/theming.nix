@@ -5,6 +5,8 @@
   ...
 }:
 let
+  themeMenu = import ../../../modules/theme-menu.nix;
+
   # Resolve a "foo.bar" nixpkgs attr path (from vars.fonts) to the package.
   font = f: {
     package = lib.getAttrFromPath (lib.splitString "." f.package) pkgs;
@@ -51,6 +53,16 @@ in
     # broken nix build).
     targets.vesktop.enable = true;
   };
+
+  # Prebuilt theme variants for the on-the-fly switcher (theme-switch / Mod+Shift+T).
+  # Runtime-only: reverts to vars.scheme on the next `home-manager switch`.
+  specialisation = lib.listToAttrs (map (t: {
+    inherit (t) name;
+    value.configuration.stylix = {
+      base16Scheme = lib.mkForce "${pkgs.base16-schemes}/share/themes/${t.name}.yaml";
+      polarity = lib.mkForce t.polarity;
+    };
+  }) themeMenu);
 
   programs.obsidian.enable = true;
   programs.btop.enable = true;

@@ -71,6 +71,7 @@ binds {
     Mod+Shift+F { fullscreen-window; }
     Mod+V { toggle-window-floating; }
     Mod+Escape { spawn "loginctl" "lock-session"; }
+    Mod+Shift+T { spawn "theme-switch"; }
 
     // Screenshots (niri built-in: saves to ~/Pictures/Screenshots + clipboard).
     // Print: interactive area/output select. Ctrl: whole screen. Alt: focused window.
